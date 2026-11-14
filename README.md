@@ -306,10 +306,10 @@ Get DedupeIQ running locally in under a minute with zero external database setup
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/dedupeiq.git
+git clone https://github.com/SomnathShaw001/DedupeIQ.git
 
 # 2. Enter directory
-cd dedupeiq
+cd DedupeIQ
 
 # 3. Install dependencies
 npm install
