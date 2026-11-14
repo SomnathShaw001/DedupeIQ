@@ -170,14 +170,22 @@ export default function ReviewQueuePage() {
     return parts.map((p, i) => {
       if (p.type === 'removed') {
         return (
-          <span key={i} className="bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400 font-semibold px-0.5 rounded">
+          <span
+            key={i}
+            className="bg-red-100 dark:bg-red-950/70 text-red-700 dark:text-red-400 px-1 py-0.5 rounded text-xs font-mono line-through decoration-red-500/70"
+            title="Character in Record A only"
+          >
             {p.value}
           </span>
         );
       }
       if (p.type === 'added') {
         return (
-          <span key={i} className="bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-semibold px-0.5 rounded">
+          <span
+            key={i}
+            className="bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 px-1 py-0.5 rounded text-xs font-mono font-semibold underline decoration-emerald-500/70"
+            title="Character in Record B only"
+          >
             {p.value}
           </span>
         );
@@ -187,31 +195,36 @@ export default function ReviewQueuePage() {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-stone-200 dark:border-stone-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-stone-200 dark:border-stone-800">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
-            Human Review Queue
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-semibold tracking-tight text-stone-900 dark:text-stone-100">
+              Human Review Queue
+            </h1>
+            <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-400 border border-orange-200 dark:border-orange-800">
+              Score: 0.75 – 0.92
+            </span>
+          </div>
           <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
-            Borderline candidate pairs (score 0.75 – 0.92) with character-level difference highlighting
+            Side-by-side reconciliation of borderline master record pairs with character-level difference highlighting
           </p>
         </div>
 
         {/* Keyboard shortcut legend */}
-        <div className="hidden lg:flex items-center gap-3 text-xs text-stone-500 dark:text-stone-400 font-mono">
+        <div className="hidden lg:flex items-center gap-2 text-xs text-stone-500 dark:text-stone-400 font-mono">
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-stone-100 dark:bg-stone-800 rounded border border-stone-300 dark:border-stone-700">M</kbd> Merge
+            <kbd className="px-1.5 py-0.5 bg-stone-100 dark:bg-stone-800 rounded border border-stone-300 dark:border-stone-700 text-[10px]">M</kbd> Merge
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-stone-100 dark:bg-stone-800 rounded border border-stone-300 dark:border-stone-700">N</kbd> Non-match
+            <kbd className="px-1.5 py-0.5 bg-stone-100 dark:bg-stone-800 rounded border border-stone-300 dark:border-stone-700 text-[10px]">N</kbd> Non-match
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-stone-100 dark:bg-stone-800 rounded border border-stone-300 dark:border-stone-700">S</kbd> Skip
+            <kbd className="px-1.5 py-0.5 bg-stone-100 dark:bg-stone-800 rounded border border-stone-300 dark:border-stone-700 text-[10px]">S</kbd> Skip
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-stone-100 dark:bg-stone-800 rounded border border-stone-300 dark:border-stone-700">J/K</kbd> Nav
+            <kbd className="px-1.5 py-0.5 bg-stone-100 dark:bg-stone-800 rounded border border-stone-300 dark:border-stone-700 text-[10px]">J/K</kbd> Nav
           </span>
         </div>
       </div>
@@ -231,216 +244,285 @@ export default function ReviewQueuePage() {
           />
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Progress and Candidate Counter */}
-          <div className="flex items-center justify-between text-xs font-mono text-stone-500">
-            <div>
-              Candidate <span className="font-semibold text-stone-900 dark:text-stone-100">{currentIndex + 1}</span> of {candidates.length} (Total pending: {pendingTotal})
+          <div className="flex items-center justify-between text-xs font-mono text-stone-500 dark:text-stone-400 px-1">
+            <div className="flex items-center gap-2">
+              <span>Candidate Pair</span>
+              <span className="px-2 py-0.5 rounded bg-stone-100 dark:bg-stone-800 font-semibold text-stone-900 dark:text-stone-100 tabular-nums">
+                {currentIndex + 1} / {candidates.length}
+              </span>
+              <span className="text-[11px] text-stone-400">
+                ({pendingTotal} total pending resolution)
+              </span>
             </div>
-            <div className="flex items-center gap-1">
+
+            <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setCurrentIndex((p) => Math.max(0, p - 1))}
                 disabled={currentIndex === 0}
-                className="p-1 rounded border border-stone-200 dark:border-stone-800 disabled:opacity-30 hover:bg-stone-100 dark:hover:bg-stone-800"
+                title="Previous candidate (K)"
+                className="h-7 w-7 flex items-center justify-center rounded border border-stone-200 dark:border-stone-800 disabled:opacity-30 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setCurrentIndex((p) => Math.min(candidates.length - 1, p + 1))}
                 disabled={currentIndex === candidates.length - 1}
-                className="p-1 rounded border border-stone-200 dark:border-stone-800 disabled:opacity-30 hover:bg-stone-100 dark:hover:bg-stone-800"
+                title="Next candidate (J)"
+                className="h-7 w-7 flex items-center justify-center rounded border border-stone-200 dark:border-stone-800 disabled:opacity-30 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
               >
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
 
-          {/* Main Comparison Card */}
-          <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg p-6 shadow-xs space-y-6">
-            {/* Top Match Bar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-lg bg-stone-50 dark:bg-stone-950/80 border border-stone-200 dark:border-stone-800">
+          {/* Main Comparison Container */}
+          <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg p-5 shadow-xs space-y-5">
+            {/* Confidence & Score Telemetry Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-md bg-stone-50 dark:bg-stone-950/80 border border-stone-200 dark:border-stone-800">
               <div>
-                <span className="text-xs font-mono text-stone-500 uppercase tracking-wider block">
-                  Composite Match Confidence
+                <span className="text-[11px] font-mono text-stone-500 uppercase tracking-wider block">
+                  Ensemble Match Confidence
                 </span>
-                <span className="text-2xl font-mono font-bold text-orange-600 dark:text-orange-500">
-                  {Math.round(active.scores.finalScore * 100)}%
-                </span>
-                <span className="text-xs text-stone-500 ml-2 font-mono">
-                  (raw: {active.scores.finalScore})
-                </span>
+                <div className="flex items-baseline gap-2 mt-0.5">
+                  <span className="text-2xl font-mono font-bold text-orange-600 dark:text-orange-500 tabular-nums">
+                    {(active.scores.finalScore * 100).toFixed(1)}%
+                  </span>
+                  <span className="text-xs text-stone-500 font-mono">
+                    (Threshold cutoff: ≥ 0.92 auto-merge)
+                  </span>
+                </div>
               </div>
 
               {/* Per-field score bars */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-mono">
-                <div>
-                  <div className="text-stone-500 text-[10px]">Name Sim</div>
-                  <div className="font-semibold">{Math.round(active.scores.nameSim * 100)}%</div>
-                  <div className="w-20 bg-stone-200 dark:bg-stone-800 h-1.5 rounded-full overflow-hidden mt-0.5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+                <div className="p-2 rounded bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800">
+                  <div className="flex items-center justify-between text-[11px] text-stone-500">
+                    <span>Name</span>
+                    <span className="font-semibold text-stone-800 dark:text-stone-200 tabular-nums">
+                      {Math.round(active.scores.nameSim * 100)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-stone-100 dark:bg-stone-800 h-1.5 rounded-full overflow-hidden mt-1.5">
                     <div
-                      className="bg-orange-600 h-full rounded-full"
+                      className="bg-orange-600 h-full rounded-full transition-all"
                       style={{ width: `${Math.round(active.scores.nameSim * 100)}%` }}
                     />
                   </div>
+                  <div className="text-[10px] text-stone-400 mt-1">Jaro-Winkler+TSR</div>
                 </div>
 
-                <div>
-                  <div className="text-stone-500 text-[10px]">Email Sim</div>
-                  <div className="font-semibold">{Math.round(active.scores.emailSim * 100)}%</div>
-                  <div className="w-20 bg-stone-200 dark:bg-stone-800 h-1.5 rounded-full overflow-hidden mt-0.5">
+                <div className="p-2 rounded bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800">
+                  <div className="flex items-center justify-between text-[11px] text-stone-500">
+                    <span>Email</span>
+                    <span className="font-semibold text-stone-800 dark:text-stone-200 tabular-nums">
+                      {Math.round(active.scores.emailSim * 100)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-stone-100 dark:bg-stone-800 h-1.5 rounded-full overflow-hidden mt-1.5">
                     <div
-                      className="bg-orange-600 h-full rounded-full"
+                      className="bg-orange-600 h-full rounded-full transition-all"
                       style={{ width: `${Math.round(active.scores.emailSim * 100)}%` }}
                     />
                   </div>
+                  <div className="text-[10px] text-stone-400 mt-1">Gmail dot/plus strip</div>
                 </div>
 
-                <div>
-                  <div className="text-stone-500 text-[10px]">Phone Sim</div>
-                  <div className="font-semibold">{Math.round(active.scores.phoneSim * 100)}%</div>
-                  <div className="w-20 bg-stone-200 dark:bg-stone-800 h-1.5 rounded-full overflow-hidden mt-0.5">
+                <div className="p-2 rounded bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800">
+                  <div className="flex items-center justify-between text-[11px] text-stone-500">
+                    <span>Phone</span>
+                    <span className="font-semibold text-stone-800 dark:text-stone-200 tabular-nums">
+                      {Math.round(active.scores.phoneSim * 100)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-stone-100 dark:bg-stone-800 h-1.5 rounded-full overflow-hidden mt-1.5">
                     <div
-                      className="bg-orange-600 h-full rounded-full"
+                      className="bg-orange-600 h-full rounded-full transition-all"
                       style={{ width: `${Math.round(active.scores.phoneSim * 100)}%` }}
                     />
                   </div>
+                  <div className="text-[10px] text-stone-400 mt-1">E.164 Suffix match</div>
                 </div>
 
-                <div>
-                  <div className="text-stone-500 text-[10px]">Address Sim</div>
-                  <div className="font-semibold">{Math.round(active.scores.addressSim * 100)}%</div>
-                  <div className="w-20 bg-stone-200 dark:bg-stone-800 h-1.5 rounded-full overflow-hidden mt-0.5">
+                <div className="p-2 rounded bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800">
+                  <div className="flex items-center justify-between text-[11px] text-stone-500">
+                    <span>Address</span>
+                    <span className="font-semibold text-stone-800 dark:text-stone-200 tabular-nums">
+                      {Math.round(active.scores.addressSim * 100)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-stone-100 dark:bg-stone-800 h-1.5 rounded-full overflow-hidden mt-1.5">
                     <div
-                      className="bg-orange-600 h-full rounded-full"
+                      className="bg-orange-600 h-full rounded-full transition-all"
                       style={{ width: `${Math.round(active.scores.addressSim * 100)}%` }}
                     />
                   </div>
+                  <div className="text-[10px] text-stone-400 mt-1">Abbrev expansion</div>
                 </div>
               </div>
             </div>
 
-            {/* Side-by-Side Record Diff Matrix */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Record A */}
-              <div className="p-4 rounded-lg border border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-950/30 space-y-4">
-                <div className="flex items-center justify-between pb-2 border-b border-stone-200 dark:border-stone-800">
-                  <span className="text-xs font-mono font-medium text-stone-500">
-                    RECORD A • {active.recordA.id.slice(0, 8)}…
-                  </span>
-                  <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-stone-200 dark:bg-stone-800">
-                    {active.recordA.source_system}
-                  </span>
-                </div>
+            {/* Field-by-Field Comparator Table */}
+            <div className="border border-stone-200 dark:border-stone-800 rounded-lg overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-stone-50 dark:bg-stone-950 text-stone-500 dark:text-stone-400 font-mono uppercase tracking-wider border-b border-stone-200 dark:border-stone-800">
+                    <tr>
+                      <th className="px-4 py-2.5 w-36">Field Attribute</th>
+                      <th className="px-4 py-2.5 w-[38%]">
+                        <div className="flex items-center justify-between">
+                          <span>Record A (Left)</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-stone-200 dark:bg-stone-800 font-sans normal-case">
+                            {active.recordA.source_system}
+                          </span>
+                        </div>
+                      </th>
+                      <th className="px-2 py-2.5 text-center w-12">Match</th>
+                      <th className="px-4 py-2.5 w-[38%]">
+                        <div className="flex items-center justify-between">
+                          <span>Record B (Right)</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-stone-200 dark:bg-stone-800 font-sans normal-case">
+                            {active.recordB.source_system}
+                          </span>
+                        </div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone-100 dark:divide-stone-800 font-sans">
+                    {/* Full Name */}
+                    <tr className="hover:bg-stone-50/50 dark:hover:bg-stone-950/40">
+                      <td className="px-4 py-3 font-mono text-[11px] font-medium text-stone-500">
+                        Full Name
+                      </td>
+                      <td className="px-4 py-3 font-medium text-stone-900 dark:text-stone-100">
+                        {renderDiffText(active.diffs.name.diffA)}
+                      </td>
+                      <td className="px-2 py-3 text-center font-mono text-[11px] text-stone-400">
+                        {Math.round(active.scores.nameSim * 100)}%
+                      </td>
+                      <td className="px-4 py-3 font-medium text-stone-900 dark:text-stone-100">
+                        {renderDiffText(active.diffs.name.diffB)}
+                      </td>
+                    </tr>
 
-                <div className="space-y-3 text-xs">
-                  <div>
-                    <span className="text-stone-500 font-mono text-[10px] block">FULL NAME</span>
-                    <div className="text-sm font-semibold text-stone-900 dark:text-stone-100">
-                      {renderDiffText(active.diffs.name.diffA)}
-                    </div>
-                  </div>
+                    {/* Email */}
+                    <tr className="hover:bg-stone-50/50 dark:hover:bg-stone-950/40 font-mono text-xs">
+                      <td className="px-4 py-3 font-mono text-[11px] font-medium text-stone-500">
+                        Email Address
+                      </td>
+                      <td className="px-4 py-3 text-stone-700 dark:text-stone-300">
+                        {active.recordA.email ? (
+                          renderDiffText(active.diffs.email.diffA)
+                        ) : (
+                          <span className="italic text-stone-400 font-sans text-xs">None</span>
+                        )}
+                      </td>
+                      <td className="px-2 py-3 text-center font-mono text-[11px] text-stone-400">
+                        {Math.round(active.scores.emailSim * 100)}%
+                      </td>
+                      <td className="px-4 py-3 text-stone-700 dark:text-stone-300">
+                        {active.recordB.email ? (
+                          renderDiffText(active.diffs.email.diffB)
+                        ) : (
+                          <span className="italic text-stone-400 font-sans text-xs">None</span>
+                        )}
+                      </td>
+                    </tr>
 
-                  <div>
-                    <span className="text-stone-500 font-mono text-[10px] block">EMAIL</span>
-                    <div className="font-mono text-stone-700 dark:text-stone-300">
-                      {active.recordA.email ? renderDiffText(active.diffs.email.diffA) : <span className="italic text-stone-400">None</span>}
-                    </div>
-                  </div>
+                    {/* Phone */}
+                    <tr className="hover:bg-stone-50/50 dark:hover:bg-stone-950/40 font-mono text-xs">
+                      <td className="px-4 py-3 font-mono text-[11px] font-medium text-stone-500">
+                        Phone Number
+                      </td>
+                      <td className="px-4 py-3 text-stone-700 dark:text-stone-300">
+                        {active.recordA.phone ? (
+                          renderDiffText(active.diffs.phone.diffA)
+                        ) : (
+                          <span className="italic text-stone-400 font-sans text-xs">None</span>
+                        )}
+                      </td>
+                      <td className="px-2 py-3 text-center font-mono text-[11px] text-stone-400">
+                        {Math.round(active.scores.phoneSim * 100)}%
+                      </td>
+                      <td className="px-4 py-3 text-stone-700 dark:text-stone-300">
+                        {active.recordB.phone ? (
+                          renderDiffText(active.diffs.phone.diffB)
+                        ) : (
+                          <span className="italic text-stone-400 font-sans text-xs">None</span>
+                        )}
+                      </td>
+                    </tr>
 
-                  <div>
-                    <span className="text-stone-500 font-mono text-[10px] block">PHONE</span>
-                    <div className="font-mono text-stone-700 dark:text-stone-300">
-                      {active.recordA.phone ? renderDiffText(active.diffs.phone.diffA) : <span className="italic text-stone-400">None</span>}
-                    </div>
-                  </div>
+                    {/* Street Address & City */}
+                    <tr className="hover:bg-stone-50/50 dark:hover:bg-stone-950/40 text-xs">
+                      <td className="px-4 py-3 font-mono text-[11px] font-medium text-stone-500">
+                        Address & City
+                      </td>
+                      <td className="px-4 py-3 text-stone-700 dark:text-stone-300">
+                        {renderDiffText(active.diffs.address.diffA)}
+                      </td>
+                      <td className="px-2 py-3 text-center font-mono text-[11px] text-stone-400">
+                        {Math.round(active.scores.addressSim * 100)}%
+                      </td>
+                      <td className="px-4 py-3 text-stone-700 dark:text-stone-300">
+                        {renderDiffText(active.diffs.address.diffB)}
+                      </td>
+                    </tr>
 
-                  <div>
-                    <span className="text-stone-500 font-mono text-[10px] block">STREET ADDRESS & CITY</span>
-                    <div className="text-stone-700 dark:text-stone-300">
-                      {renderDiffText(active.diffs.address.diffA)}
-                    </div>
-                  </div>
+                    {/* Date of Birth */}
+                    {(active.recordA.dob || active.recordB.dob) && (
+                      <tr className="hover:bg-stone-50/50 dark:hover:bg-stone-950/40 font-mono text-xs">
+                        <td className="px-4 py-3 font-mono text-[11px] font-medium text-stone-500">
+                          Date of Birth
+                        </td>
+                        <td className="px-4 py-3 text-stone-700 dark:text-stone-300">
+                          {active.recordA.dob ? active.recordA.dob.slice(0, 10) : <span className="italic text-stone-400 font-sans text-xs">None</span>}
+                        </td>
+                        <td className="px-2 py-3 text-center font-mono text-[11px] text-stone-400">
+                          {active.scores.dobMatch ? '100%' : '≠'}
+                        </td>
+                        <td className="px-4 py-3 text-stone-700 dark:text-stone-300">
+                          {active.recordB.dob ? active.recordB.dob.slice(0, 10) : <span className="italic text-stone-400 font-sans text-xs">None</span>}
+                        </td>
+                      </tr>
+                    )}
 
-                  {active.recordA.dob && (
-                    <div>
-                      <span className="text-stone-500 font-mono text-[10px] block">DATE OF BIRTH</span>
-                      <div className="font-mono text-stone-700 dark:text-stone-300">
-                        {active.recordA.dob.slice(0, 10)}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Record B */}
-              <div className="p-4 rounded-lg border border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-950/30 space-y-4">
-                <div className="flex items-center justify-between pb-2 border-b border-stone-200 dark:border-stone-800">
-                  <span className="text-xs font-mono font-medium text-stone-500">
-                    RECORD B • {active.recordB.id.slice(0, 8)}…
-                  </span>
-                  <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-stone-200 dark:bg-stone-800">
-                    {active.recordB.source_system}
-                  </span>
-                </div>
-
-                <div className="space-y-3 text-xs">
-                  <div>
-                    <span className="text-stone-500 font-mono text-[10px] block">FULL NAME</span>
-                    <div className="text-sm font-semibold text-stone-900 dark:text-stone-100">
-                      {renderDiffText(active.diffs.name.diffB)}
-                    </div>
-                  </div>
-
-                  <div>
-                    <span className="text-stone-500 font-mono text-[10px] block">EMAIL</span>
-                    <div className="font-mono text-stone-700 dark:text-stone-300">
-                      {active.recordB.email ? renderDiffText(active.diffs.email.diffB) : <span className="italic text-stone-400">None</span>}
-                    </div>
-                  </div>
-
-                  <div>
-                    <span className="text-stone-500 font-mono text-[10px] block">PHONE</span>
-                    <div className="font-mono text-stone-700 dark:text-stone-300">
-                      {active.recordB.phone ? renderDiffText(active.diffs.phone.diffB) : <span className="italic text-stone-400">None</span>}
-                    </div>
-                  </div>
-
-                  <div>
-                    <span className="text-stone-500 font-mono text-[10px] block">STREET ADDRESS & CITY</span>
-                    <div className="text-stone-700 dark:text-stone-300">
-                      {renderDiffText(active.diffs.address.diffB)}
-                    </div>
-                  </div>
-
-                  {active.recordB.dob && (
-                    <div>
-                      <span className="text-stone-500 font-mono text-[10px] block">DATE OF BIRTH</span>
-                      <div className="font-mono text-stone-700 dark:text-stone-300">
-                        {active.recordB.dob.slice(0, 10)}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                    {/* Record Metadata / IDs */}
+                    <tr className="hover:bg-stone-50/50 dark:hover:bg-stone-950/40 font-mono text-[11px] text-stone-500 bg-stone-50/30 dark:bg-stone-950/20">
+                      <td className="px-4 py-2 font-medium text-stone-400">
+                        Internal UUID
+                      </td>
+                      <td className="px-4 py-2">
+                        {active.recordA.id}
+                      </td>
+                      <td className="px-2 py-2 text-center">ID</td>
+                      <td className="px-4 py-2">
+                        {active.recordB.id}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
 
-            {/* Decision Action Buttons */}
-            <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-stone-200 dark:border-stone-800">
-              <div className="flex items-center gap-2">
+            {/* Decision Action Toolbar */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-stone-200 dark:border-stone-800">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
                 <button
                   onClick={() => handleDecision('merge')}
                   disabled={resolving}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-medium text-xs shadow-xs transition-colors"
+                  className="flex-1 sm:flex-initial h-9 inline-flex items-center justify-center gap-2 px-4 rounded-md bg-stone-900 text-stone-100 dark:bg-stone-100 dark:text-stone-900 hover:bg-stone-800 dark:hover:bg-white disabled:opacity-50 font-medium text-xs shadow-xs transition-colors"
                 >
-                  <CheckCircle2 className="w-4 h-4" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                   Merge Records [M]
                 </button>
                 <button
                   onClick={() => handleDecision('non_match')}
                   disabled={resolving}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-stone-300 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-50 text-stone-700 dark:text-stone-300 font-medium text-xs transition-colors"
+                  className="flex-1 sm:flex-initial h-9 inline-flex items-center justify-center gap-2 px-4 rounded-md border border-stone-300 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 disabled:opacity-50 text-stone-700 dark:text-stone-300 font-medium text-xs transition-colors"
                 >
-                  <XCircle className="w-4 h-4" />
+                  <XCircle className="w-4 h-4 text-red-500" />
                   Not a Duplicate [N]
                 </button>
               </div>
@@ -448,7 +530,7 @@ export default function ReviewQueuePage() {
               <button
                 onClick={() => handleDecision('skip')}
                 disabled={resolving}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 text-xs font-mono transition-colors"
+                className="h-9 inline-flex items-center gap-1.5 px-3 rounded-md text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 text-xs font-mono transition-colors"
               >
                 <SkipForward className="w-3.5 h-3.5" />
                 Skip Candidate [S]

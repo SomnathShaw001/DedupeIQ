@@ -146,20 +146,20 @@ export default function ClustersPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-stone-200 dark:border-stone-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-stone-200 dark:border-stone-800">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
+          <h1 className="text-lg font-semibold tracking-tight text-stone-900 dark:text-stone-100">
             Duplicate Entity Clusters
           </h1>
           <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
-            Disjoint-set equivalence groups with elected Golden Records and transactional unmerge
+            Disjoint-set equivalence groups with elected Golden Records and transactional unmerge rollback
           </p>
         </div>
 
         <button
           onClick={fetchClusters}
           title="Refresh clusters"
-          className="p-1.5 rounded border border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors self-start sm:self-auto"
+          className="h-8 w-8 flex items-center justify-center rounded-md border border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors self-start sm:self-auto"
         >
           <RefreshCw className="w-3.5 h-3.5" />
         </button>

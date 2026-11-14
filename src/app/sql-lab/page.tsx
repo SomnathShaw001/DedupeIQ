@@ -76,11 +76,11 @@ export default function SqlLabPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-stone-200 dark:border-stone-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-stone-200 dark:border-stone-800">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
+          <h1 className="text-lg font-semibold tracking-tight text-stone-900 dark:text-stone-100">
             PostgreSQL DBMS Lab & Query Inspection
           </h1>
           <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">

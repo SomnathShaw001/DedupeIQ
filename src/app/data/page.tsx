@@ -248,13 +248,13 @@ export default function DataPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-stone-200 dark:border-stone-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-stone-200 dark:border-stone-800">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
-            Data Catalog
+          <h1 className="text-lg font-semibold tracking-tight text-stone-900 dark:text-stone-100">
+            Master Data Catalog
           </h1>
           <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
-            Normalized 3NF master records with autonomous phonetic indexes and cluster links
+            Normalized 3NF entity records with phonetic index generation and cluster pointers
           </p>
         </div>
 
@@ -262,7 +262,7 @@ export default function DataPage() {
           <a
             href="/api/records/export"
             download
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium border border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors shadow-xs"
+            className="h-8 inline-flex items-center gap-1.5 px-3 rounded-md text-xs font-medium border border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors shadow-xs"
           >
             <Download className="w-3.5 h-3.5" />
             Export CSV
@@ -273,7 +273,7 @@ export default function DataPage() {
               setCsvFile(null);
               setShowImportModal(true);
             }}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium border border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors shadow-xs"
+            className="h-8 inline-flex items-center gap-1.5 px-3 rounded-md text-xs font-medium border border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors shadow-xs"
           >
             <Upload className="w-3.5 h-3.5" />
             Import CSV
@@ -293,7 +293,7 @@ export default function DataPage() {
               });
               setShowAddModal(true);
             }}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium bg-stone-900 text-stone-100 dark:bg-stone-100 dark:text-stone-900 hover:bg-stone-800 dark:hover:bg-white transition-colors shadow-xs"
+            className="h-8 inline-flex items-center gap-1.5 px-3 rounded-md text-xs font-medium bg-stone-900 text-stone-100 dark:bg-stone-100 dark:text-stone-900 hover:bg-stone-800 dark:hover:bg-white transition-colors shadow-xs"
           >
             <Plus className="w-3.5 h-3.5" />
             Add Record
@@ -302,7 +302,7 @@ export default function DataPage() {
       </div>
 
       {/* Filters Bar */}
-      <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg p-3 flex flex-wrap items-center gap-3">
+      <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg p-3 flex flex-wrap items-center gap-2.5">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
           <input
@@ -312,8 +312,8 @@ export default function DataPage() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            placeholder="Search name, email, phone, city..."
-            className="w-full pl-9 pr-3 py-1.5 rounded border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 text-xs text-stone-900 dark:text-stone-100 focus:outline-hidden focus:ring-1 focus:ring-orange-500"
+            placeholder="Filter by name, email, phone, city..."
+            className="h-8 w-full pl-9 pr-3 rounded-md border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 text-xs text-stone-900 dark:text-stone-100 focus:outline-hidden focus:ring-1 focus:ring-orange-500"
           />
         </div>
 
@@ -323,12 +323,12 @@ export default function DataPage() {
             setEntityType(e.target.value);
             setPage(1);
           }}
-          className="px-2.5 py-1.5 rounded border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 text-xs text-stone-700 dark:text-stone-300 focus:outline-hidden"
+          className="h-8 px-2.5 rounded-md border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 text-xs text-stone-700 dark:text-stone-300 focus:outline-hidden"
         >
-          <option value="">All Entities</option>
-          <option value="customer">Customer</option>
-          <option value="student">Student</option>
-          <option value="product">Product</option>
+          <option value="">All Entity Domains</option>
+          <option value="customer">Customers</option>
+          <option value="student">Students</option>
+          <option value="product">Products</option>
         </select>
 
         <select
@@ -337,18 +337,18 @@ export default function DataPage() {
             setStatus(e.target.value);
             setPage(1);
           }}
-          className="px-2.5 py-1.5 rounded border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 text-xs text-stone-700 dark:text-stone-300 focus:outline-hidden"
+          className="h-8 px-2.5 rounded-md border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 text-xs text-stone-700 dark:text-stone-300 focus:outline-hidden"
         >
           <option value="">All Statuses</option>
-          <option value="active">Active</option>
-          <option value="merged">Merged</option>
+          <option value="active">Active Standalone</option>
+          <option value="merged">Merged Redundant</option>
           <option value="archived">Archived</option>
         </select>
 
         <button
           onClick={fetchRecords}
           title="Refresh query"
-          className="p-2 rounded border border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+          className="h-8 w-8 flex items-center justify-center rounded-md border border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
         >
           <RefreshCw className="w-3.5 h-3.5" />
         </button>

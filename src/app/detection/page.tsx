@@ -198,15 +198,42 @@ export default function DetectionPage() {
               <div className="font-medium text-stone-900 dark:text-stone-100 flex items-center justify-between">
                 <span>Decision Cutoff Thresholds</span>
                 <span className="text-[11px] font-mono text-stone-500">
-                  Auto ≥ {thresholdAuto} • Review [{thresholdReview}, {thresholdAuto}) • Non-match &lt; {thresholdReview}
+                  Auto ≥ {thresholdAuto.toFixed(2)} • Review [{thresholdReview.toFixed(2)}, {thresholdAuto.toFixed(2)}) • Non-match &lt; {thresholdReview.toFixed(2)}
                 </span>
+              </div>
+
+              {/* Visual Decision Zone Partition Bar */}
+              <div className="space-y-1">
+                <div className="w-full h-4 rounded overflow-hidden flex text-[10px] font-mono select-none border border-stone-300 dark:border-stone-700">
+                  <div
+                    style={{ width: `${thresholdReview * 100}%` }}
+                    className="bg-stone-200 dark:bg-stone-800 h-full flex items-center justify-center text-stone-600 dark:text-stone-400 font-sans text-[10px] truncate px-1"
+                    title={`Non-Match: score < ${thresholdReview}`}
+                  >
+                    Non-Match (&lt; {thresholdReview.toFixed(2)})
+                  </div>
+                  <div
+                    style={{ width: `${(thresholdAuto - thresholdReview) * 100}%` }}
+                    className="bg-amber-500/80 dark:bg-amber-600/80 text-stone-950 font-semibold h-full flex items-center justify-center text-[10px] truncate px-1"
+                    title={`Review: ${thresholdReview} ≤ score < ${thresholdAuto}`}
+                  >
+                    Human Review
+                  </div>
+                  <div
+                    style={{ width: `${(1.0 - thresholdAuto) * 100}%` }}
+                    className="bg-orange-600 text-white font-semibold h-full flex items-center justify-center text-[10px] truncate px-1"
+                    title={`Auto-Merge: score ≥ ${thresholdAuto}`}
+                  >
+                    Auto-Merge
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <div className="flex justify-between text-stone-600 dark:text-stone-400 mb-1">
-                    <span>Auto-Merge Threshold</span>
-                    <span className="font-mono font-semibold text-stone-900 dark:text-stone-100">
+                    <span>Auto-Merge Threshold (θ_auto)</span>
+                    <span className="font-mono font-semibold text-stone-900 dark:text-stone-100 tabular-nums">
                       {thresholdAuto.toFixed(2)}
                     </span>
                   </div>
@@ -220,14 +247,14 @@ export default function DetectionPage() {
                     className="w-full accent-orange-600"
                   />
                   <p className="text-[10px] text-stone-400 mt-0.5">
-                    Pairs with composite similarity ≥ {thresholdAuto} merge automatically.
+                    Pairs with composite similarity ≥ {thresholdAuto.toFixed(2)} merge automatically without manual review.
                   </p>
                 </div>
 
                 <div>
                   <div className="flex justify-between text-stone-600 dark:text-stone-400 mb-1">
-                    <span>Human Review Threshold</span>
-                    <span className="font-mono font-semibold text-stone-900 dark:text-stone-100">
+                    <span>Human Review Threshold (θ_rev)</span>
+                    <span className="font-mono font-semibold text-stone-900 dark:text-stone-100 tabular-nums">
                       {thresholdReview.toFixed(2)}
                     </span>
                   </div>
@@ -241,7 +268,7 @@ export default function DetectionPage() {
                     className="w-full accent-orange-600"
                   />
                   <p className="text-[10px] text-stone-400 mt-0.5">
-                    Pairs between {thresholdReview} and {thresholdAuto} queue for side-by-side review.
+                    Borderline pairs [{thresholdReview.toFixed(2)}, {thresholdAuto.toFixed(2)}) queue for side-by-side reconciliation.
                   </p>
                 </div>
               </div>
@@ -397,10 +424,15 @@ export default function DetectionPage() {
 
       {/* Historical Detection Runs Table */}
       <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg overflow-hidden shadow-xs">
-        <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-stone-900 dark:text-stone-100">
-            Historical Pipeline Execution Logs
-          </h2>
+        <div className="px-4 py-3 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between">
+          <div>
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-stone-700 dark:text-stone-300">
+              Pipeline Execution Ledger
+            </h2>
+            <p className="text-[11px] text-stone-500 dark:text-stone-400">
+              Audited historical deduplication runs and blocking prune ratios
+            </p>
+          </div>
           <span className="text-xs font-mono text-stone-500">
             {runs.length} runs recorded
           </span>
@@ -410,48 +442,50 @@ export default function DetectionPage() {
           <table className="w-full text-left text-xs">
             <thead className="bg-stone-50 dark:bg-stone-950 text-stone-500 dark:text-stone-400 uppercase tracking-wider font-mono border-b border-stone-200 dark:border-stone-800">
               <tr>
-                <th className="px-5 py-2.5">Run ID</th>
-                <th className="px-5 py-2.5">Started At</th>
-                <th className="px-5 py-2.5">Records Scanned</th>
-                <th className="px-5 py-2.5">Pairs Compared</th>
-                <th className="px-5 py-2.5">Pairs Avoided</th>
-                <th className="px-5 py-2.5">Clusters Found</th>
-                <th className="px-5 py-2.5">Thresholds</th>
+                <th className="px-4 py-2 text-left">Run ID</th>
+                <th className="px-4 py-2 text-left">Timestamp</th>
+                <th className="px-4 py-2 text-right">Records Scanned</th>
+                <th className="px-4 py-2 text-right">Pairs Compared</th>
+                <th className="px-4 py-2 text-right">Pairs Avoided</th>
+                <th className="px-4 py-2 text-right">Clusters Found</th>
+                <th className="px-4 py-2 text-right">Cutoff Thresholds</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100 dark:divide-stone-800 font-mono">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-6 text-center text-stone-400">
+                  <td colSpan={7} className="px-4 py-6 text-center text-stone-400 font-sans">
                     Loading run history...
                   </td>
                 </tr>
               ) : runs.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-8 text-center text-stone-400">
+                  <td colSpan={7} className="px-4 py-6 text-center text-stone-400 font-sans">
                     No runs recorded yet. Execute your first detection job above.
                   </td>
                 </tr>
               ) : (
                 runs.map((r) => (
-                  <tr key={r.id} className="hover:bg-stone-50 dark:hover:bg-stone-950/50">
-                    <td className="px-5 py-3 text-stone-400">{r.id.slice(0, 8)}…</td>
-                    <td className="px-5 py-3 text-stone-600 dark:text-stone-300 font-sans">
-                      {new Date(r.started_at).toLocaleString()}
+                  <tr key={r.id} className="hover:bg-stone-50 dark:hover:bg-stone-950/50 transition-colors">
+                    <td className="px-4 py-2 text-stone-400 font-mono text-[11px]">
+                      {r.id.slice(0, 8)}…
                     </td>
-                    <td className="px-5 py-3 text-stone-900 dark:text-stone-100 font-semibold">
+                    <td className="px-4 py-2 text-stone-600 dark:text-stone-300 font-sans">
+                      {new Date(r.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {new Date(r.started_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-2 text-right text-stone-900 dark:text-stone-100 font-semibold tabular-nums">
                       {Number(r.records_scanned).toLocaleString()}
                     </td>
-                    <td className="px-5 py-3 text-stone-600 dark:text-stone-300">
+                    <td className="px-4 py-2 text-right text-stone-600 dark:text-stone-300 tabular-nums">
                       {Number(r.pairs_compared).toLocaleString()}
                     </td>
-                    <td className="px-5 py-3 text-emerald-600 dark:text-emerald-400">
+                    <td className="px-4 py-2 text-right text-emerald-600 dark:text-emerald-400 font-semibold tabular-nums">
                       {r.config?.pairsAvoidedPct ? `${r.config.pairsAvoidedPct}%` : '—'}
                     </td>
-                    <td className="px-5 py-3 text-orange-600 dark:text-orange-400 font-semibold">
+                    <td className="px-4 py-2 text-right text-orange-600 dark:text-orange-400 font-semibold tabular-nums">
                       {r.clusters_found}
                     </td>
-                    <td className="px-5 py-3 text-[11px] text-stone-500">
+                    <td className="px-4 py-2 text-right text-[11px] text-stone-500 tabular-nums">
                       Auto: {r.threshold_auto} • Rev: {r.threshold_review}
                     </td>
                   </tr>

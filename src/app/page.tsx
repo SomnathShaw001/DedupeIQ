@@ -127,15 +127,15 @@ export default function DashboardPage() {
   }));
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Top Header & Fast Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-stone-200 dark:border-stone-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-stone-200 dark:border-stone-800">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
+          <h1 className="text-lg font-semibold tracking-tight text-stone-900 dark:text-stone-100">
             System Overview
           </h1>
           <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
-            Real-time master data deduplication and relational cluster statistics
+            Relational 3NF master record health, cluster convergence, and pipeline telemetry
           </p>
         </div>
 
@@ -143,20 +143,20 @@ export default function DashboardPage() {
           <button
             onClick={fetchData}
             title="Refresh database metrics"
-            className="p-1.5 rounded border border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+            className="h-8 px-2.5 rounded-md border border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors flex items-center justify-center text-xs"
           >
             <RefreshCw className="w-3.5 h-3.5" />
           </button>
           <Link
             href="/detection"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium bg-orange-600 hover:bg-orange-700 text-white transition-colors shadow-xs"
+            className="h-8 inline-flex items-center gap-1.5 px-3 rounded-md text-xs font-medium bg-orange-600 hover:bg-orange-700 text-white transition-colors"
           >
             <ScanSearch className="w-3.5 h-3.5" />
             Run Detection
           </Link>
           <Link
             href="/review"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium bg-stone-900 dark:bg-stone-100 text-stone-100 dark:text-stone-900 hover:bg-stone-800 dark:hover:bg-white transition-colors shadow-xs"
+            className="h-8 inline-flex items-center gap-1.5 px-3 rounded-md text-xs font-medium bg-stone-900 dark:bg-stone-100 text-stone-100 dark:text-stone-900 hover:bg-stone-800 dark:hover:bg-white transition-colors"
           >
             <CheckCheck className="w-3.5 h-3.5" />
             Review Queue ({summary.pending_review_count})
@@ -165,34 +165,34 @@ export default function DashboardPage() {
       </div>
 
       {/* Primary KPI Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <KpiCard
           label="Total Records"
           value={Number(summary.total_records).toLocaleString()}
-          subValue={`${summary.active_records} active`}
-          description="Total master records across sources"
+          subValue={`${Number(summary.active_records).toLocaleString()} active`}
+          description="Master records in database"
         />
         <KpiCard
           label="Duplicate Clusters"
           value={Number(summary.duplicate_clusters_count).toLocaleString()}
           subValue={`Avg size: ${summary.avg_cluster_size}`}
-          description="Equivalence sets with >1 record"
+          description="Disjoint equivalence sets (>1 record)"
         />
         <KpiCard
-          label="Estimated Duplicate %"
+          label="Redundancy Rate"
           value={`${summary.duplicate_reduction_pct}%`}
           trend={Number(summary.duplicate_reduction_pct) > 0 ? "Identified" : "Clean"}
           trendDirection="neutral"
-          description="Percentage of redundant master records"
+          description="Proportion of duplicate records"
         />
         <KpiCard
-          label="Records Saved"
+          label="Records Deduplicated"
           value={Number(summary.merged_records).toLocaleString()}
           subValue={`${summary.auto_merged_count} auto`}
-          description="Redundant records deduplicated"
+          description="Records consolidated into golden masters"
         />
         <KpiCard
-          label="Last Run"
+          label="Last Pipeline Run"
           value={summary.last_run_at ? new Date(summary.last_run_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Never'}
           subValue={summary.last_run_clusters ? `${summary.last_run_clusters} clusters` : undefined}
           description={summary.last_run_at ? new Date(summary.last_run_at).toLocaleDateString() : 'Awaiting first run'}
@@ -200,30 +200,30 @@ export default function DashboardPage() {
       </div>
 
       {/* Analytics Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Run Trend Chart */}
-        <div className="lg:col-span-2 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg p-5">
-          <div className="flex items-center justify-between mb-4">
+        <div className="lg:col-span-2 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <h2 className="text-sm font-semibold text-stone-900 dark:text-stone-100">
-                Detection Run History
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+                Detection History & Cluster Yield
               </h2>
-              <p className="text-xs text-stone-500 dark:text-stone-400">
-                Clusters discovered across historical execution runs
+              <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">
+                Duplicate clusters identified per execution cycle
               </p>
             </div>
             <Link
               href="/detection"
               className="text-xs text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 flex items-center gap-1 font-mono"
             >
-              History <ArrowRight className="w-3 h-3" />
+              Config & Run <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
 
-          <div className="h-56 w-full">
+          <div className="h-52 w-full">
             {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="clustersGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#ea580c" stopOpacity={0.25} />
@@ -231,21 +231,23 @@ export default function DashboardPage() {
                     </linearGradient>
                   </defs>
                   <XAxis dataKey="name" stroke="#78716c" fontSize={11} tickLine={false} />
-                  <YAxis stroke="#78716c" fontSize={11} tickLine={false} />
+                  <YAxis stroke="#78716c" fontSize={11} tickLine={false} allowDecimals={false} />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: '#1c1917',
                       borderColor: '#292524',
-                      fontSize: '12px',
+                      fontSize: '11px',
                       color: '#f5f5f4',
-                      borderRadius: '6px',
+                      borderRadius: '4px',
+                      padding: '6px 10px',
                     }}
+                    formatter={(val) => [Number(val).toLocaleString() + ' clusters', 'Discovered']}
                   />
                   <Area
                     type="monotone"
                     dataKey="clusters"
                     stroke="#ea580c"
-                    strokeWidth={2}
+                    strokeWidth={1.5}
                     fillOpacity={1}
                     fill="url(#clustersGrad)"
                   />
@@ -253,21 +255,21 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center text-xs text-stone-400 font-mono">
-                No detection runs executed yet
+                No detection runs recorded
               </div>
             )}
           </div>
         </div>
 
         {/* Source System Breakdown */}
-        <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg p-5">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <h2 className="text-sm font-semibold text-stone-900 dark:text-stone-100">
-                Top Ingestion Sources
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+                Source System Ingestion Rate
               </h2>
-              <p className="text-xs text-stone-500 dark:text-stone-400">
-                Duplicate rate by source system
+              <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">
+                Duplicate concentration by origin
               </p>
             </div>
             <Link
@@ -278,27 +280,29 @@ export default function DashboardPage() {
             </Link>
           </div>
 
-          <div className="h-56 w-full">
+          <div className="h-52 w-full">
             {sourceChartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={sourceChartData} layout="vertical" margin={{ top: 5, right: 15, left: 10, bottom: 5 }}>
-                  <XAxis type="number" stroke="#78716c" fontSize={10} unit="%" />
-                  <YAxis dataKey="name" type="category" stroke="#78716c" fontSize={10} width={90} tickLine={false} />
+                  <XAxis type="number" stroke="#78716c" fontSize={10} unit="%" domain={[0, 100]} />
+                  <YAxis dataKey="name" type="category" stroke="#78716c" fontSize={10} width={80} tickLine={false} />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: '#1c1917',
                       borderColor: '#292524',
-                      fontSize: '12px',
+                      fontSize: '11px',
                       color: '#f5f5f4',
-                      borderRadius: '6px',
+                      borderRadius: '4px',
+                      padding: '6px 10px',
                     }}
+                    formatter={(val) => [val + '%', 'Duplicate Rate']}
                   />
-                  <Bar dataKey="rate" fill="#57534e" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="rate" fill="#ea580c" radius={[0, 3, 3, 0]} barSize={12} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center text-xs text-stone-400 font-mono">
-                No source system data
+                No source telemetry data
               </div>
             )}
           </div>
@@ -307,12 +311,17 @@ export default function DashboardPage() {
 
       {/* Source Systems Table & Quick Navigation */}
       <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg overflow-hidden shadow-xs">
-        <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-stone-900 dark:text-stone-100">
-            Source System Telemetry
-          </h2>
+        <div className="px-4 py-3 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between">
+          <div>
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-stone-700 dark:text-stone-300">
+              Source Pipeline Telemetry
+            </h2>
+            <p className="text-[11px] text-stone-500 dark:text-stone-400">
+              Breakdown of records, duplicate density, and consolidation state by source system
+            </p>
+          </div>
           <span className="text-xs font-mono text-stone-500">
-            {sources.length} active pipelines
+            {sources.length} active sources
           </span>
         </div>
 
@@ -320,30 +329,30 @@ export default function DashboardPage() {
           <table className="w-full text-left text-xs">
             <thead className="bg-stone-50 dark:bg-stone-950 text-stone-500 dark:text-stone-400 uppercase tracking-wider font-mono border-b border-stone-200 dark:border-stone-800">
               <tr>
-                <th className="px-5 py-2.5">Source System</th>
-                <th className="px-5 py-2.5">Total Records</th>
-                <th className="px-5 py-2.5">Merged Duplicates</th>
-                <th className="px-5 py-2.5">Clustered</th>
-                <th className="px-5 py-2.5">Duplicate Rate</th>
+                <th className="px-4 py-2 text-left">Source System</th>
+                <th className="px-4 py-2 text-right">Total Records</th>
+                <th className="px-4 py-2 text-right">Merged Duplicates</th>
+                <th className="px-4 py-2 text-right">Clustered Records</th>
+                <th className="px-4 py-2 text-right">Duplicate Rate</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100 dark:divide-stone-800 font-mono">
               {sources.map((s) => (
-                <tr key={s.source_system} className="hover:bg-stone-50 dark:hover:bg-stone-950/50">
-                  <td className="px-5 py-3 font-medium text-stone-900 dark:text-stone-100 font-sans">
+                <tr key={s.source_system} className="hover:bg-stone-50 dark:hover:bg-stone-950/50 transition-colors">
+                  <td className="px-4 py-2 font-medium text-stone-900 dark:text-stone-100 font-sans">
                     {s.source_system}
                   </td>
-                  <td className="px-5 py-3 text-stone-600 dark:text-stone-300">
+                  <td className="px-4 py-2 text-right text-stone-600 dark:text-stone-300 tabular-nums">
                     {Number(s.total_records).toLocaleString()}
                   </td>
-                  <td className="px-5 py-3 text-orange-600 dark:text-orange-400">
+                  <td className="px-4 py-2 text-right text-orange-600 dark:text-orange-400 tabular-nums font-semibold">
                     {Number(s.merged_records).toLocaleString()}
                   </td>
-                  <td className="px-5 py-3 text-stone-600 dark:text-stone-400">
+                  <td className="px-4 py-2 text-right text-stone-600 dark:text-stone-400 tabular-nums">
                     {Number(s.clustered_records).toLocaleString()}
                   </td>
-                  <td className="px-5 py-3">
-                    <span className="inline-block px-2 py-0.5 rounded bg-stone-100 dark:bg-stone-800 text-stone-800 dark:text-stone-200 text-[11px]">
+                  <td className="px-4 py-2 text-right tabular-nums">
+                    <span className="inline-block px-1.5 py-0.5 rounded bg-stone-100 dark:bg-stone-800 text-stone-800 dark:text-stone-200 text-[11px]">
                       {s.duplicate_rate_pct}%
                     </span>
                   </td>
@@ -351,7 +360,7 @@ export default function DashboardPage() {
               ))}
               {sources.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-5 py-8 text-center text-stone-400">
+                  <td colSpan={5} className="px-4 py-6 text-center text-stone-400 font-sans">
                     No source data found. Import records or run benchmark seed.
                   </td>
                 </tr>

@@ -167,127 +167,175 @@ export default function BenchmarkPage() {
           </div>
 
           {/* Confusion Matrix and Methodology */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Confusion Matrix */}
-            <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg p-5 shadow-xs">
-              <div className="flex items-center gap-2 mb-4 pb-2 border-b border-stone-200 dark:border-stone-800">
-                <Target className="w-4 h-4 text-orange-600" />
-                <h2 className="text-sm font-semibold text-stone-900 dark:text-stone-100">
-                  Binary Confusion Matrix
-                </h2>
-              </div>
-
-              <div className="space-y-4 text-xs font-mono">
-                <div className="grid grid-cols-2 gap-2 text-center">
-                  {/* True Positive */}
-                  <div className="p-4 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
-                    <span className="text-emerald-800 dark:text-emerald-300 text-[10px] uppercase font-sans font-semibold block mb-1">
-                      True Positive (TP)
-                    </span>
-                    <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
-                      {metrics.confusionMatrix.truePositives}
-                    </span>
-                    <span className="text-[10px] text-stone-500 block mt-1 font-sans">
-                      Detected & Ground Truth Match
-                    </span>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            {/* 2x2 Contingency Matrix */}
+            <div className="lg:col-span-5 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg p-4 shadow-xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-stone-200 dark:border-stone-800">
+                  <div className="flex items-center gap-2">
+                    <Target className="w-3.5 h-3.5 text-orange-600" />
+                    <h2 className="text-xs font-semibold uppercase tracking-wider text-stone-700 dark:text-stone-300">
+                      Binary Contingency Matrix (2×2)
+                    </h2>
                   </div>
-
-                  {/* False Positive */}
-                  <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800">
-                    <span className="text-red-800 dark:text-red-300 text-[10px] uppercase font-sans font-semibold block mb-1">
-                      False Positive (FP)
-                    </span>
-                    <span className="text-2xl font-bold text-red-700 dark:text-red-400">
-                      {metrics.confusionMatrix.falsePositives}
-                    </span>
-                    <span className="text-[10px] text-stone-500 block mt-1 font-sans">
-                      Predicted Duplicate, but Distinct
-                    </span>
-                  </div>
-
-                  {/* False Negative */}
-                  <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
-                    <span className="text-amber-800 dark:text-amber-300 text-[10px] uppercase font-sans font-semibold block mb-1">
-                      False Negative (FN)
-                    </span>
-                    <span className="text-2xl font-bold text-amber-700 dark:text-amber-400">
-                      {metrics.confusionMatrix.falseNegatives}
-                    </span>
-                    <span className="text-[10px] text-stone-500 block mt-1 font-sans">
-                      Missed Ground Truth Duplicate
-                    </span>
-                  </div>
-
-                  {/* True Negative */}
-                  <div className="p-4 rounded-lg bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800">
-                    <span className="text-stone-700 dark:text-stone-300 text-[10px] uppercase font-sans font-semibold block mb-1">
-                      True Negative (TN)
-                    </span>
-                    <span className="text-2xl font-bold text-stone-700 dark:text-stone-300">
-                      {metrics.confusionMatrix.trueNegatives.toLocaleString()}
-                    </span>
-                    <span className="text-[10px] text-stone-500 block mt-1 font-sans">
-                      Correctly Filtered via Blocking
-                    </span>
-                  </div>
+                  <span className="text-[10px] font-mono text-stone-400">
+                    N = {metrics.evaluatedCandidates.toLocaleString()} pairs
+                  </span>
                 </div>
 
-                <div className="pt-2 text-[11px] font-sans text-stone-500 border-t border-stone-100 dark:border-stone-800">
-                  Calculated against <span className="font-mono">{metrics.totalGroundTruthDuplicates}</span> ground-truth duplicate pairs stored in table <code className="font-mono text-stone-700 dark:text-stone-300">benchmark_ground_truth</code>.
+                <div className="border border-stone-200 dark:border-stone-800 rounded-md overflow-hidden text-xs font-mono">
+                  <table className="w-full text-center">
+                    <thead className="bg-stone-50 dark:bg-stone-950 text-stone-500 border-b border-stone-200 dark:border-stone-800 text-[10px] uppercase tracking-wider">
+                      <tr>
+                        <th className="px-2 py-2 text-left font-sans text-stone-400">Pred \ Truth</th>
+                        <th className="px-2 py-2 text-emerald-700 dark:text-emerald-400 font-semibold">Actual Dup (+)</th>
+                        <th className="px-2 py-2 text-stone-600 dark:text-stone-400 font-semibold">Actual Distinct (−)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-stone-100 dark:divide-stone-800">
+                      {/* Row 1: Predicted Positive */}
+                      <tr>
+                        <td className="px-2.5 py-2.5 text-left font-sans text-stone-600 dark:text-stone-400 font-medium text-[11px] bg-stone-50/50 dark:bg-stone-950/30">
+                          Pred. Duplicate
+                        </td>
+                        <td className="px-2.5 py-2.5 bg-emerald-50/70 dark:bg-emerald-950/40 border-r border-stone-100 dark:border-stone-800">
+                          <span className="text-base font-bold text-emerald-800 dark:text-emerald-300 block tabular-nums">
+                            {metrics.confusionMatrix.truePositives}
+                          </span>
+                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-sans block">
+                            TP (Hit)
+                          </span>
+                        </td>
+                        <td className="px-2.5 py-2.5 bg-red-50/50 dark:bg-red-950/30">
+                          <span className="text-base font-bold text-red-700 dark:text-red-400 block tabular-nums">
+                            {metrics.confusionMatrix.falsePositives}
+                          </span>
+                          <span className="text-[10px] text-red-500 font-sans block">
+                            FP (Type I Error)
+                          </span>
+                        </td>
+                      </tr>
+
+                      {/* Row 2: Predicted Negative */}
+                      <tr>
+                        <td className="px-2.5 py-2.5 text-left font-sans text-stone-600 dark:text-stone-400 font-medium text-[11px] bg-stone-50/50 dark:bg-stone-950/30">
+                          Pred. Distinct
+                        </td>
+                        <td className="px-2.5 py-2.5 bg-amber-50/50 dark:bg-amber-950/30 border-r border-stone-100 dark:border-stone-800">
+                          <span className="text-base font-bold text-amber-700 dark:text-amber-400 block tabular-nums">
+                            {metrics.confusionMatrix.falseNegatives}
+                          </span>
+                          <span className="text-[10px] text-amber-600 dark:text-amber-400 font-sans block">
+                            FN (Type II Error)
+                          </span>
+                        </td>
+                        <td className="px-2.5 py-2.5 bg-stone-50/70 dark:bg-stone-950/60">
+                          <span className="text-base font-bold text-stone-700 dark:text-stone-300 block tabular-nums">
+                            {metrics.confusionMatrix.trueNegatives.toLocaleString()}
+                          </span>
+                          <span className="text-[10px] text-stone-500 font-sans block">
+                            TN (Filtered)
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="pt-3 mt-3 border-t border-stone-100 dark:border-stone-800 text-[11px] font-sans text-stone-500 space-y-1">
+                <div className="flex justify-between font-mono">
+                  <span>Precision (PPV = TP / (TP+FP)):</span>
+                  <span className="font-semibold text-stone-800 dark:text-stone-200">
+                    {(metrics.precision * 100).toFixed(1)}%
+                  </span>
+                </div>
+                <div className="flex justify-between font-mono">
+                  <span>Recall (TPR = TP / (TP+FN)):</span>
+                  <span className="font-semibold text-stone-800 dark:text-stone-200">
+                    {(metrics.recall * 100).toFixed(1)}%
+                  </span>
                 </div>
               </div>
             </div>
 
             {/* Threshold vs F1 Optimization Curve */}
-            <div className="lg:col-span-2 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg p-5 shadow-xs">
-              <div className="flex items-center justify-between mb-4 pb-2 border-b border-stone-200 dark:border-stone-800">
+            <div className="lg:col-span-7 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg p-4 shadow-xs">
+              <div className="flex items-center justify-between mb-2 pb-2 border-b border-stone-200 dark:border-stone-800">
                 <div>
-                  <h2 className="text-sm font-semibold text-stone-900 dark:text-stone-100">
-                    Threshold vs F1 Sensitivity Curve
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-stone-700 dark:text-stone-300">
+                    Threshold Sensitivity Curve (PR / F1 Trade-off)
                   </h2>
-                  <p className="text-xs text-stone-500 dark:text-stone-400">
-                    Balancing precision (avoiding false merges) vs recall (capturing all variants)
+                  <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">
+                    Continuous evaluation of F1 harmonic mean across similarity cutoff threshold θ
                   </p>
                 </div>
               </div>
 
-              <div className="h-64 w-full">
+              <div className="h-64 w-full pt-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
                     data={metrics.thresholdCurve}
-                    margin={{ top: 10, right: 20, left: -20, bottom: 0 }}
+                    margin={{ top: 10, right: 25, left: 10, bottom: 25 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#292524" opacity={0.3} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#292524" opacity={0.2} />
                     <XAxis
                       dataKey="threshold"
                       stroke="#78716c"
-                      fontSize={11}
+                      fontSize={10}
                       tickLine={false}
                       domain={[0.5, 1.0]}
+                      tickFormatter={(v) => Number(v).toFixed(2)}
+                      label={{
+                        value: 'Similarity Cutoff Threshold (θ)',
+                        position: 'insideBottom',
+                        offset: -14,
+                        fill: '#78716c',
+                        fontSize: 10,
+                      }}
                     />
                     <YAxis
                       stroke="#78716c"
-                      fontSize={11}
+                      fontSize={10}
                       tickLine={false}
                       domain={[0, 1]}
+                      tickFormatter={(v) => `${Math.round(v * 100)}%`}
+                      label={{
+                        value: 'Metric Rate (%)',
+                        angle: -90,
+                        position: 'insideLeft',
+                        offset: 0,
+                        fill: '#78716c',
+                        fontSize: 10,
+                      }}
                     />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: '#1c1917',
                         borderColor: '#292524',
-                        fontSize: '12px',
+                        fontSize: '11px',
                         color: '#f5f5f4',
-                        borderRadius: '6px',
+                        borderRadius: '4px',
+                        padding: '6px 10px',
                       }}
+                      formatter={(val, name) => [
+                        `${(Number(val) * 100).toFixed(1)}%`,
+                        name === 'f1' ? 'F1 Harmonic Mean' : name === 'precision' ? 'Precision' : 'Recall',
+                      ]}
+                      labelFormatter={(label) => `Threshold θ = ${Number(label).toFixed(2)}`}
                     />
-                    <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
+                    <Legend
+                      verticalAlign="top"
+                      align="right"
+                      wrapperStyle={{ fontSize: '10px', paddingBottom: '8px' }}
+                    />
                     <Line
                       type="monotone"
                       dataKey="f1"
                       name="F1 Score"
                       stroke="#ea580c"
-                      strokeWidth={2.5}
-                      dot={{ r: 3 }}
+                      strokeWidth={2}
+                      dot={{ r: 2 }}
                     />
                     <Line
                       type="monotone"
@@ -295,16 +343,16 @@ export default function BenchmarkPage() {
                       name="Precision"
                       stroke="#10b981"
                       strokeWidth={1.5}
-                      strokeDasharray="4 4"
+                      strokeDasharray="3 3"
                       dot={false}
                     />
                     <Line
                       type="monotone"
                       dataKey="recall"
                       name="Recall"
-                      stroke="#64748b"
+                      stroke="#78716c"
                       strokeWidth={1.5}
-                      strokeDasharray="4 4"
+                      strokeDasharray="3 3"
                       dot={false}
                     />
                   </LineChart>

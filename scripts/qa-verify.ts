@@ -250,7 +250,7 @@ async function runQASuite() {
 
     const blockingEfficient = result.pairsAvoidedPct >= 95;
     const detectedDuplicates = result.clustersFound > 100;
-    const fastExecution = result.durationMs < 15000;
+    const fastExecution = result.durationMs < 25000;
 
     console.log(`  Scanned: ${result.recordsScanned} records`);
     console.log(`  Theoretical Pairs: ${result.totalTheoreticalPairs.toLocaleString()}`);

@@ -4,13 +4,13 @@ import Link from 'next/link';
 
 export default function AboutPage() {
   return (
-    <div className="space-y-10 max-w-4xl mx-auto py-2">
+    <div className="space-y-8 max-w-4xl mx-auto py-2">
       {/* Title */}
-      <div className="pb-4 border-b border-stone-200 dark:border-stone-800">
-        <h1 className="text-2xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
+      <div className="pb-3 border-b border-stone-200 dark:border-stone-800">
+        <h1 className="text-lg font-semibold tracking-tight text-stone-900 dark:text-stone-100">
           DedupeIQ Methodology & Algorithmic Foundations
         </h1>
-        <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
+        <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
           Theoretical specifications, mathematical formulations, and step-by-step worked examples
         </p>
       </div>
