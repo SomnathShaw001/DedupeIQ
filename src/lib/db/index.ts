@@ -188,11 +188,20 @@ export function getDb(): DbClient {
   if (databaseUrl && !databaseUrl.startsWith('pglite://')) {
     global.__dbInstance = new PostgresDbClient(databaseUrl);
   } else {
-    const defaultDataDir = path.resolve(process.cwd(), '.data', 'dedupeiq.db');
+    const defaultDataDir = process.env.VERCEL
+      ? path.resolve('/tmp', '.data', 'dedupeiq.db')
+      : path.resolve(process.cwd(), '.data', 'dedupeiq.db');
     global.__dbInstance = new PGliteDbClient(defaultDataDir);
   }
 
   return global.__dbInstance;
 }
 
-export const db = getDb();
+export const db: DbClient = {
+  query: <T extends QueryResultRow = QueryResultRow>(sql: string, params: unknown[] = []) => getDb().query<T>(sql, params),
+  queryOne: <T extends QueryResultRow = QueryResultRow>(sql: string, params: unknown[] = []) => getDb().queryOne<T>(sql, params),
+  execute: (sql: string, params: unknown[] = []) => getDb().execute(sql, params),
+  exec: (sql: string) => getDb().exec(sql),
+  transaction: <T>(callback: (client: DbClient) => Promise<T>) => getDb().transaction(callback),
+  getMode: () => getDb().getMode(),
+};
