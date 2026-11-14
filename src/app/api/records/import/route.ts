@@ -6,18 +6,21 @@ import { z } from 'zod';
 
 
 const importRowSchema = z.object({
-  entity_type: z.enum(['customer', 'student', 'product']).default('customer'),
-  full_name: z.string().min(1, 'Name is required'),
+  entity_type: z
+    .enum(['customer', 'student', 'product'])
+    .optional()
+    .default('customer'),
+  full_name: z.string().trim().min(1, 'Name is required and cannot be empty'),
   email: z.string().optional().nullable(),
   phone: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
   city: z.string().optional().nullable(),
   dob: z.string().optional().nullable(),
-  source_system: z.string().default('CSV-Import'),
+  source_system: z.string().optional().default('CSV-Import'),
 });
 
 const importPayloadSchema = z.object({
-  records: z.array(importRowSchema).min(1, 'At least 1 record required'),
+  records: z.array(z.record(z.string(), z.unknown())).min(1, 'At least 1 record required'),
 });
 
 export async function POST(request: NextRequest) {
@@ -31,13 +34,14 @@ export async function POST(request: NextRequest) {
     const errors: { row: number; error: string }[] = [];
 
     parsed.records.forEach((row, index) => {
-      try {
-        const validated = importRowSchema.parse(row);
-        validRows.push(validated);
-      } catch (err) {
+      const result = importRowSchema.safeParse(row);
+      if (result.success) {
+        validRows.push(result.data);
+      } else {
+        const errorMsg = result.error.issues.map((i) => i.message).join('; ');
         errors.push({
           row: index + 1,
-          error: err instanceof Error ? err.message : 'Invalid row data',
+          error: errorMsg,
         });
       }
     });

@@ -168,6 +168,7 @@ export async function POST(request: NextRequest) {
 
     const { record_a, record_b } = candidateRows[0];
 
+    let finalClusterId: string | null = null;
     await db.transaction(async (tx) => {
       // Fetch both records
       const records = await tx.query<MasterRecordData>(
@@ -210,6 +211,7 @@ export async function POST(request: NextRequest) {
           [goldenId, allMembers.length, targetClusterId]
         );
       }
+      finalClusterId = targetClusterId;
 
       // Update record assignments
       for (const m of allMembers) {
@@ -248,7 +250,7 @@ export async function POST(request: NextRequest) {
       );
     });
 
-    return NextResponse.json({ success: true, decision: 'merged' });
+    return NextResponse.json({ success: true, decision: 'merged', clusterId: finalClusterId });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.issues[0].message }, { status: 400 });

@@ -13,6 +13,7 @@ export async function POST(
     const db = getDb();
     const { id: clusterId } = await params;
 
+    let finalReverted = 0;
     await db.transaction(async (tx) => {
       // 1. Fetch latest snapshot
       const logRows = await tx.query<{
@@ -28,6 +29,7 @@ export async function POST(
 
       const snapshot = logRows[0]?.snapshot;
 
+      let revertedCount = 0;
       if (snapshot && snapshot.members && snapshot.members.length > 0) {
         // Revert member records according to pre-merge snapshot
         for (const m of snapshot.members) {
@@ -35,14 +37,21 @@ export async function POST(
             `UPDATE records SET status = 'active', cluster_id = NULL WHERE id = $1`,
             [m.id]
           );
+          revertedCount++;
         }
       } else {
         // Fallback: reset all records currently assigned to this cluster
+        const currentMembers = await tx.query<{ id: string }>(
+          `SELECT id FROM records WHERE cluster_id = $1`,
+          [clusterId]
+        );
         await tx.query(
           `UPDATE records SET status = 'active', cluster_id = NULL WHERE cluster_id = $1`,
           [clusterId]
         );
+        revertedCount = currentMembers.length;
       }
+      finalReverted = revertedCount;
 
       // Record unmerge in merge_log
       await tx.query(
@@ -52,7 +61,7 @@ export async function POST(
         `,
         [
           clusterId,
-          JSON.stringify({ unmerged_at: new Date().toISOString(), prior_snapshot_id: logRows[0]?.id || null }),
+          JSON.stringify({ unmerged_at: new Date().toISOString(), prior_snapshot_id: logRows[0]?.id || null, reverted_count: revertedCount }),
           'Cluster unmerged and reverted to active standalone records',
         ]
       );
@@ -61,7 +70,11 @@ export async function POST(
       await tx.query(`DELETE FROM clusters WHERE id = $1`, [clusterId]);
     });
 
-    return NextResponse.json({ success: true, message: 'Cluster successfully unmerged and reverted' });
+    return NextResponse.json({
+      success: true,
+      revertedCount: finalReverted,
+      message: `Cluster successfully unmerged and reverted ${finalReverted} records`,
+    });
   } catch (error) {
     console.error('Cluster unmerge error:', error);
     return NextResponse.json(
