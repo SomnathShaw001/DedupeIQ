@@ -2,12 +2,19 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import { KpiCard } from '@/components/KpiCard';
 import {
   ArrowRight,
   ScanSearch,
   CheckCheck,
   RefreshCw,
+  Sparkles,
+  Database,
+  HelpCircle,
+  FileSpreadsheet,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -64,6 +71,8 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [seeding, setSeeding] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -77,6 +86,37 @@ export default function DashboardPage() {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleQuickSeed = async () => {
+    setSeeding(true);
+    try {
+      const res = await fetch('/api/benchmark', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetTotal: 2000, duplicateRate: 0.15 }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Seed failed');
+
+      toast.success(
+        `Seeded ${json.result.totalRecords} records (${json.result.duplicatePercentage}% duplicates). Running detection...`
+      );
+
+      const detRes = await fetch('/api/detection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ useBlocking: true, thresholdAuto: 0.92, thresholdReview: 0.75 }),
+      });
+
+      if (!detRes.ok) throw new Error('Detection pipeline run failed');
+      toast.success('Detection complete! Master clusters and review queue generated.');
+      await fetchData();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to seed benchmark data');
+    } finally {
+      setSeeding(false);
     }
   };
 
@@ -141,6 +181,14 @@ export default function DashboardPage() {
 
         <div className="flex items-center gap-2">
           <button
+            onClick={() => setShowGuide(!showGuide)}
+            className="h-8 px-2.5 rounded-md border border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors flex items-center gap-1.5 text-xs"
+          >
+            <HelpCircle className="w-3.5 h-3.5 text-orange-600" />
+            <span className="hidden sm:inline">Workflow Guide</span>
+            {showGuide ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </button>
+          <button
             onClick={fetchData}
             title="Refresh database metrics"
             className="h-8 px-2.5 rounded-md border border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors flex items-center justify-center text-xs"
@@ -163,6 +211,108 @@ export default function DashboardPage() {
           </Link>
         </div>
       </div>
+
+      {/* Empty Database Getting Started Banner */}
+      {Number(summary.total_records) === 0 && (
+        <div className="p-4 rounded-lg border border-amber-200 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/20">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+                <Database className="w-4 h-4 text-amber-600" />
+                Database Unseeded — Quick Start DedupeIQ
+              </h3>
+              <p className="text-xs text-amber-800 dark:text-amber-300 mt-1">
+                Your master database currently has 0 records. Seed 2,000 synthetic multi-source records with 15% injected duplicates to test the full pipeline, or import a CSV.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleQuickSeed}
+                disabled={seeding}
+                className="h-8 px-3 rounded-md text-xs font-medium bg-orange-600 hover:bg-orange-700 text-white transition-colors flex items-center gap-1.5 disabled:opacity-50"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                {seeding ? 'Seeding & Running...' : 'Seed 2,000 Benchmark Records'}
+              </button>
+              <Link
+                href="/data"
+                className="h-8 px-3 rounded-md border border-stone-200 dark:border-stone-800 text-xs font-medium bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors flex items-center gap-1.5"
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5" />
+                Import CSV
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Workflow Guide Drawer */}
+      {showGuide && (
+        <div className="p-4 rounded-lg border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900/50 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-700 dark:text-stone-300 flex items-center gap-1.5">
+              <HelpCircle className="w-4 h-4 text-orange-600" />
+              DedupeIQ End-to-End Evaluation Workflow
+            </h3>
+            <button
+              onClick={() => setShowGuide(false)}
+              className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 text-xs"
+            >
+              Close
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+            <div className="p-3 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-md">
+              <div className="text-xs font-semibold text-stone-900 dark:text-stone-100 mb-1">
+                1. Data Ingestion & Normalization
+              </div>
+              <p className="text-[11px] text-stone-500 dark:text-stone-400">
+                Browse <Link href="/data" className="text-orange-600 underline">/data</Link> to inspect records or upload CSVs. PostgreSQL triggers automatically compute canonical tokens, Soundex, and Metaphone keys.
+              </p>
+            </div>
+            <div className="p-3 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-md">
+              <div className="text-xs font-semibold text-stone-900 dark:text-stone-100 mb-1">
+                2. Multi-Key Blocking & Scoring
+              </div>
+              <p className="text-[11px] text-stone-500 dark:text-stone-400">
+                Visit <Link href="/detection" className="text-orange-600 underline">/detection</Link> to run the engine. Blocking eliminates 98%+ comparisons. Candidates are scored via Jaro-Winkler, Levenshtein, and Token-Set ratio.
+              </p>
+            </div>
+            <div className="p-3 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-md">
+              <div className="text-xs font-semibold text-stone-900 dark:text-stone-100 mb-1">
+                3. Review Queue & Shortcuts
+              </div>
+              <p className="text-[11px] text-stone-500 dark:text-stone-400">
+                Go to <Link href="/review" className="text-orange-600 underline">/review</Link> to inspect borderline pairs with character diffs. Use keyboard shortcuts: <kbd className="font-mono bg-stone-100 dark:bg-stone-800 px-1 rounded">M</kbd> Merge, <kbd className="font-mono bg-stone-100 dark:bg-stone-800 px-1 rounded">N</kbd> Non-Match, <kbd className="font-mono bg-stone-100 dark:bg-stone-800 px-1 rounded">S</kbd> Skip.
+              </p>
+            </div>
+            <div className="p-3 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-md">
+              <div className="text-xs font-semibold text-stone-900 dark:text-stone-100 mb-1">
+                4. Clusters & Reversible Unmerge
+              </div>
+              <p className="text-[11px] text-stone-500 dark:text-stone-400">
+                Browse <Link href="/clusters" className="text-orange-600 underline">/clusters</Link> to see golden masters formed via Union-Find. Every merge stores a JSONB snapshot in <code>merge_log</code>, allowing 100% reversible unmerge.
+              </p>
+            </div>
+            <div className="p-3 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-md">
+              <div className="text-xs font-semibold text-stone-900 dark:text-stone-100 mb-1">
+                5. Ground-Truth Benchmarking
+              </div>
+              <p className="text-[11px] text-stone-500 dark:text-stone-400">
+                Open <Link href="/benchmark" className="text-orange-600 underline">/benchmark</Link> to view the 2×2 binary contingency matrix, Precision (97%+), Recall (95%+), and threshold sensitivity curves.
+              </p>
+            </div>
+            <div className="p-3 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-md">
+              <div className="text-xs font-semibold text-stone-900 dark:text-stone-100 mb-1">
+                6. SQL Lab & Query Planner
+              </div>
+              <p className="text-[11px] text-stone-500 dark:text-stone-400">
+                Explore <Link href="/sql-lab" className="text-orange-600 underline">/sql-lab</Link> to inspect raw 3NF DDL, triggers, and live <code>EXPLAIN ANALYZE</code> query performance comparing indexed blocking vs cartesian joins.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Primary KPI Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
