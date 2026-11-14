@@ -1,0 +1,397 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import { KpiCard } from '@/components/KpiCard';
+import { EmptyState } from '@/components/EmptyState';
+import {
+  TestTube,
+  RefreshCw,
+  Target,
+  Play,
+} from 'lucide-react';
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  CartesianGrid,
+} from 'recharts';
+
+interface BenchmarkMetricsData {
+  totalGroundTruthDuplicates: number;
+  evaluatedCandidates: number;
+  precision: number;
+  recall: number;
+  f1: number;
+  confusionMatrix: {
+    truePositives: number;
+    falsePositives: number;
+    falseNegatives: number;
+    trueNegatives: number;
+  };
+  thresholdCurve: {
+    threshold: number;
+    precision: number;
+    recall: number;
+    f1: number;
+  }[];
+}
+
+export default function BenchmarkPage() {
+  const [metrics, setMetrics] = useState<BenchmarkMetricsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [seeding, setSeeding] = useState(false);
+
+  const fetchMetrics = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/benchmark');
+      if (!res.ok) throw new Error('Failed to load benchmark evaluation');
+      const json = await res.json();
+      setMetrics(json.metrics || null);
+    } catch {
+      toast.error('Error fetching benchmark metrics');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMetrics();
+  }, []);
+
+  const handleSeed = async () => {
+    setSeeding(true);
+    try {
+      const res = await fetch('/api/benchmark', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetTotal: 2000, duplicateRate: 0.15 }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Seed failed');
+
+      toast.success(
+        `Seeded ${json.result.totalRecords} records with ${json.result.injectedDuplicates} injected duplicates (${json.result.duplicatePercentage}%)`
+      );
+
+      // Trigger detection to generate candidate scores against the new seed
+      const detRes = await fetch('/api/detection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ useBlocking: true, thresholdAuto: 0.92, thresholdReview: 0.75 }),
+      });
+      if (detRes.ok) {
+        toast.success('Detection pipeline evaluated against ground truth');
+      }
+
+      fetchMetrics();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Seeding failed');
+    } finally {
+      setSeeding(false);
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-stone-200 dark:border-stone-800">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-stone-900 dark:text-stone-100">
+            Scientific Benchmark & Ground-Truth Evaluation
+          </h1>
+          <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+            Empirical validation against labeled synthetic master records with controlled typographic and phonetic noise
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={fetchMetrics}
+            title="Refresh metrics"
+            className="p-1.5 rounded border border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={handleSeed}
+            disabled={seeding}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white transition-colors shadow-xs"
+          >
+            <Play className="w-3.5 h-3.5" />
+            {seeding ? 'Generating 2,000 Records...' : 'Generate 2,000 Benchmark Records'}
+          </button>
+        </div>
+      </div>
+
+      {loading && !metrics ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-24 bg-stone-200 dark:bg-stone-800 rounded-lg animate-pulse" />
+          ))}
+        </div>
+      ) : metrics ? (
+        <div className="space-y-8">
+          {/* Top Score Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <KpiCard
+              label="Precision (PPV)"
+              value={`${(metrics.precision * 100).toFixed(1)}%`}
+              subValue={`${metrics.confusionMatrix.truePositives} TP / ${metrics.confusionMatrix.truePositives + metrics.confusionMatrix.falsePositives} Predicted`}
+              description="Proportion of predicted duplicates that are true duplicates"
+            />
+            <KpiCard
+              label="Recall (Sensitivity)"
+              value={`${(metrics.recall * 100).toFixed(1)}%`}
+              subValue={`${metrics.confusionMatrix.truePositives} / ${metrics.totalGroundTruthDuplicates} Injected`}
+              description="Proportion of true duplicates successfully detected"
+            />
+            <KpiCard
+              label="F1 Score (Harmonic Mean)"
+              value={(metrics.f1 * 100).toFixed(1)}
+              subValue={`Score: ${metrics.f1}`}
+              description="Harmonic mean of precision and recall balance"
+            />
+            <KpiCard
+              label="Ground Truth Universe"
+              value={metrics.totalGroundTruthDuplicates}
+              subValue={`${metrics.evaluatedCandidates} pairs evaluated`}
+              description="Total injected duplicate pairs in benchmark ground truth"
+            />
+          </div>
+
+          {/* Confusion Matrix and Methodology */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Confusion Matrix */}
+            <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg p-5 shadow-xs">
+              <div className="flex items-center gap-2 mb-4 pb-2 border-b border-stone-200 dark:border-stone-800">
+                <Target className="w-4 h-4 text-orange-600" />
+                <h2 className="text-sm font-semibold text-stone-900 dark:text-stone-100">
+                  Binary Confusion Matrix
+                </h2>
+              </div>
+
+              <div className="space-y-4 text-xs font-mono">
+                <div className="grid grid-cols-2 gap-2 text-center">
+                  {/* True Positive */}
+                  <div className="p-4 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+                    <span className="text-emerald-800 dark:text-emerald-300 text-[10px] uppercase font-sans font-semibold block mb-1">
+                      True Positive (TP)
+                    </span>
+                    <span className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">
+                      {metrics.confusionMatrix.truePositives}
+                    </span>
+                    <span className="text-[10px] text-stone-500 block mt-1 font-sans">
+                      Detected & Ground Truth Match
+                    </span>
+                  </div>
+
+                  {/* False Positive */}
+                  <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800">
+                    <span className="text-red-800 dark:text-red-300 text-[10px] uppercase font-sans font-semibold block mb-1">
+                      False Positive (FP)
+                    </span>
+                    <span className="text-2xl font-bold text-red-700 dark:text-red-400">
+                      {metrics.confusionMatrix.falsePositives}
+                    </span>
+                    <span className="text-[10px] text-stone-500 block mt-1 font-sans">
+                      Predicted Duplicate, but Distinct
+                    </span>
+                  </div>
+
+                  {/* False Negative */}
+                  <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
+                    <span className="text-amber-800 dark:text-amber-300 text-[10px] uppercase font-sans font-semibold block mb-1">
+                      False Negative (FN)
+                    </span>
+                    <span className="text-2xl font-bold text-amber-700 dark:text-amber-400">
+                      {metrics.confusionMatrix.falseNegatives}
+                    </span>
+                    <span className="text-[10px] text-stone-500 block mt-1 font-sans">
+                      Missed Ground Truth Duplicate
+                    </span>
+                  </div>
+
+                  {/* True Negative */}
+                  <div className="p-4 rounded-lg bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800">
+                    <span className="text-stone-700 dark:text-stone-300 text-[10px] uppercase font-sans font-semibold block mb-1">
+                      True Negative (TN)
+                    </span>
+                    <span className="text-2xl font-bold text-stone-700 dark:text-stone-300">
+                      {metrics.confusionMatrix.trueNegatives.toLocaleString()}
+                    </span>
+                    <span className="text-[10px] text-stone-500 block mt-1 font-sans">
+                      Correctly Filtered via Blocking
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2 text-[11px] font-sans text-stone-500 border-t border-stone-100 dark:border-stone-800">
+                  Calculated against <span className="font-mono">{metrics.totalGroundTruthDuplicates}</span> ground-truth duplicate pairs stored in table <code className="font-mono text-stone-700 dark:text-stone-300">benchmark_ground_truth</code>.
+                </div>
+              </div>
+            </div>
+
+            {/* Threshold vs F1 Optimization Curve */}
+            <div className="lg:col-span-2 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg p-5 shadow-xs">
+              <div className="flex items-center justify-between mb-4 pb-2 border-b border-stone-200 dark:border-stone-800">
+                <div>
+                  <h2 className="text-sm font-semibold text-stone-900 dark:text-stone-100">
+                    Threshold vs F1 Sensitivity Curve
+                  </h2>
+                  <p className="text-xs text-stone-500 dark:text-stone-400">
+                    Balancing precision (avoiding false merges) vs recall (capturing all variants)
+                  </p>
+                </div>
+              </div>
+
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={metrics.thresholdCurve}
+                    margin={{ top: 10, right: 20, left: -20, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#292524" opacity={0.3} />
+                    <XAxis
+                      dataKey="threshold"
+                      stroke="#78716c"
+                      fontSize={11}
+                      tickLine={false}
+                      domain={[0.5, 1.0]}
+                    />
+                    <YAxis
+                      stroke="#78716c"
+                      fontSize={11}
+                      tickLine={false}
+                      domain={[0, 1]}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#1c1917',
+                        borderColor: '#292524',
+                        fontSize: '12px',
+                        color: '#f5f5f4',
+                        borderRadius: '6px',
+                      }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
+                    <Line
+                      type="monotone"
+                      dataKey="f1"
+                      name="F1 Score"
+                      stroke="#ea580c"
+                      strokeWidth={2.5}
+                      dot={{ r: 3 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="precision"
+                      name="Precision"
+                      stroke="#10b981"
+                      strokeWidth={1.5}
+                      strokeDasharray="4 4"
+                      dot={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="recall"
+                      name="Recall"
+                      stroke="#64748b"
+                      strokeWidth={1.5}
+                      strokeDasharray="4 4"
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+
+          {/* Synthetic Corruption Taxonomy */}
+          <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg overflow-hidden shadow-xs">
+            <div className="px-5 py-4 border-b border-stone-200 dark:border-stone-800">
+              <h2 className="text-sm font-semibold text-stone-900 dark:text-stone-100">
+                Injected Corruption Taxonomy in Synthetic Generator
+              </h2>
+              <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+                Simulates real-world master data noise introduced by distributed heterogeneous ingestion systems
+              </p>
+            </div>
+
+            <div className="p-5 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono">
+              <div className="p-3 rounded border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950">
+                <div className="font-semibold text-stone-900 dark:text-stone-100 mb-1">
+                  1. Nickname Mappings
+                </div>
+                <div className="text-stone-500 font-sans">
+                  Swaps formal names with nicknames (Robert &rarr; Bob, William &rarr; Bill, Alexander &rarr; Alex). Resolved by stage-1 dictionary normalizer.
+                </div>
+              </div>
+
+              <div className="p-3 rounded border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950">
+                <div className="font-semibold text-stone-900 dark:text-stone-100 mb-1">
+                  2. Token Order Transpositions
+                </div>
+                <div className="text-stone-500 font-sans">
+                  Swaps surname and given name (e.g. &quot;Sharma Rahul&quot; vs &quot;Rahul Sharma&quot;). Handled by stage-3 Token-Set Ratio algorithm.
+                </div>
+              </div>
+
+              <div className="p-3 rounded border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950">
+                <div className="font-semibold text-stone-900 dark:text-stone-100 mb-1">
+                  3. Typographic Letter Swaps
+                </div>
+                <div className="text-stone-500 font-sans">
+                  Transposes adjacent letters (e.g. &quot;Sharma&quot; &rarr; &quot;Shahrma&quot;). Scored via Jaro-Winkler with prefix scaling factor.
+                </div>
+              </div>
+
+              <div className="p-3 rounded border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950">
+                <div className="font-semibold text-stone-900 dark:text-stone-100 mb-1">
+                  4. Gmail Sub-Addressing Aliases
+                </div>
+                <div className="text-stone-500 font-sans">
+                  Injects dot variations and +tags (e.g. &quot;john.doe+work@gmail.com&quot;). Normalized to canonical form via database trigger.
+                </div>
+              </div>
+
+              <div className="p-3 rounded border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950">
+                <div className="font-semibold text-stone-900 dark:text-stone-100 mb-1">
+                  5. Phone Country Code Variants
+                </div>
+                <div className="text-stone-500 font-sans">
+                  Formats numbers with +91, +1, or leading trunk zeros. Canonicalized to uniform digit string for exact/suffix matching.
+                </div>
+              </div>
+
+              <div className="p-3 rounded border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950">
+                <div className="font-semibold text-stone-900 dark:text-stone-100 mb-1">
+                  6. Address Abbreviation Expansions
+                </div>
+                <div className="text-stone-500 font-sans">
+                  Replaces St &rarr; Street, Rd &rarr; Road, Ste &rarr; Suite, Apt &rarr; Apartment. Evaluated via fuzzy token set similarity.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="py-12">
+          <EmptyState
+            icon={TestTube}
+            title="Benchmark Dataset Uninitialized"
+            description="Generate a synthetic dataset of 2,000 records with 15% ground truth duplicates to view evaluation metrics."
+            actionLabel="Generate 2,000 Records"
+            onAction={handleSeed}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
