@@ -49,6 +49,7 @@ export default function DataPage() {
   const [entityType, setEntityType] = useState('');
   const [status, setStatus] = useState('');
   const [sourceSystem, setSourceSystem] = useState('');
+  const [availableSources, setAvailableSources] = useState<{ name: string; count: number }[]>([]);
 
   // Modals
   const [showAddModal, setShowAddModal] = useState(false);
@@ -104,6 +105,7 @@ export default function DataPage() {
       if (!res.ok) throw new Error('Failed to fetch records');
       const json = await res.json();
       setRecords(json.data || []);
+      setAvailableSources(json.sources || []);
       setTotalPages(json.pagination?.totalPages || 1);
       setTotalRecords(json.pagination?.total || 0);
     } catch {
@@ -353,6 +355,46 @@ export default function DataPage() {
           <RefreshCw className="w-3.5 h-3.5" />
         </button>
       </div>
+
+      {/* Source Ingestion Pills */}
+      {availableSources.length > 0 && (
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs scrollbar-none">
+          <span className="text-[10px] uppercase font-mono text-stone-400 whitespace-nowrap">Sources:</span>
+          <button
+            onClick={() => {
+              setSourceSystem('');
+              setPage(1);
+            }}
+            className={`h-6 px-2 rounded-full font-mono text-[11px] transition-colors whitespace-nowrap ${
+              !sourceSystem
+                ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 font-semibold'
+                : 'border border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800'
+            }`}
+          >
+            All ({totalRecords})
+          </button>
+          {availableSources.map((s) => {
+            const isSelected = sourceSystem === s.name;
+            return (
+              <button
+                key={s.name}
+                onClick={() => {
+                  setSourceSystem(isSelected ? '' : s.name);
+                  setPage(1);
+                }}
+                className={`h-6 px-2 rounded-full font-mono text-[11px] transition-colors whitespace-nowrap flex items-center gap-1 ${
+                  isSelected
+                    ? 'bg-orange-600 text-white font-semibold'
+                    : 'border border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800'
+                }`}
+              >
+                <span>{s.name}</span>
+                <span className={`text-[10px] ${isSelected ? 'text-orange-200' : 'text-stone-400'}`}>({s.count})</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Main Records Table */}
       <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg overflow-hidden shadow-xs">

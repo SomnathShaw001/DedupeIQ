@@ -96,8 +96,17 @@ export async function GET(request: NextRequest) {
 
     const rows = await db.query(dataSql, params);
 
+    // Retrieve active source system counts for faceted filtering
+    const sourceRows = await db.query<{ source_system: string; count: string | number }>(`
+      SELECT source_system, COUNT(*) as count 
+      FROM records 
+      GROUP BY source_system 
+      ORDER BY count DESC
+    `);
+
     return NextResponse.json({
       data: rows,
+      sources: sourceRows.map((s) => ({ name: s.source_system, count: Number(s.count) })),
       pagination: {
         page,
         limit,

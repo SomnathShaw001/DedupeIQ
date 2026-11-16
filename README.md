@@ -56,7 +56,10 @@ When heterogeneous enterprise systems (CRM, e-commerce web portals, mobile apps,
 - **Golden Record Survivorship**: Field-level election based on completeness, descriptive length, and recency, preserving lineage and source traceability.
 - **Transactional Rollback (Unmerge)**: Full audit snapshots stored in `merge_log` JSONB. Reverting a cluster restores all member records to standalone `active` status in a single atomic transaction.
 - **Empirical Ground-Truth Benchmark**: Built-in synthetic generator producing 2,000 records with ~15% injected corruptions (typos, swapped characters, omitted vowels, nicknames, phone formats, address abbreviations) evaluated against ground-truth labels.
+- **Interactive Deduplication Simulator**: Real-time pairwise scoring playground with preset test cases (Indian name inversion, Western nicknames, phonetic typos, negative controls) and field-by-field golden master preview.
+- **Forensic Merge Journal & Audit Trail**: Immutable transaction ledger capturing point-in-time JSONB state snapshots in `merge_log` with 1-click atomic rollback.
 - **Interactive SQL Lab**: Live execution of `EXPLAIN ANALYZE` on indexed blocking queries versus un-indexed cartesian joins, showing buffer hits, index scans, and execution costs.
+- **Multi-Cloud Deployment**: Turnkey zero-config deployment on Vercel (with Neon PostgreSQL) and Zoho Catalyst AppSail (`catalyst.json`, `app-config.json`, and `server.js`).
 
 ---
 
@@ -306,10 +309,10 @@ Get DedupeIQ running locally in under a minute with zero external database setup
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/SomnathShaw001/DedupeIQ.git
+git clone https://github.com/SomnathShaw001/dbmsprj.git
 
 # 2. Enter directory
-cd DedupeIQ
+cd dbmsprj
 
 # 3. Install dependencies
 npm install

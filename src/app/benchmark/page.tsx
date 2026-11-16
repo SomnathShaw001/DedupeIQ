@@ -45,6 +45,7 @@ export default function BenchmarkPage() {
   const [metrics, setMetrics] = useState<BenchmarkMetricsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const fetchMetrics = async () => {
     try {
@@ -61,6 +62,7 @@ export default function BenchmarkPage() {
   };
 
   useEffect(() => {
+    setMounted(true);
     fetchMetrics();
   }, []);
 
@@ -273,90 +275,96 @@ export default function BenchmarkPage() {
               </div>
 
               <div className="h-64 w-full pt-2">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={metrics.thresholdCurve}
-                    margin={{ top: 10, right: 25, left: 10, bottom: 25 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#292524" opacity={0.2} />
-                    <XAxis
-                      dataKey="threshold"
-                      stroke="#78716c"
-                      fontSize={10}
-                      tickLine={false}
-                      domain={[0.5, 1.0]}
-                      tickFormatter={(v) => Number(v).toFixed(2)}
-                      label={{
-                        value: 'Similarity Cutoff Threshold (θ)',
-                        position: 'insideBottom',
-                        offset: -14,
-                        fill: '#78716c',
-                        fontSize: 10,
-                      }}
-                    />
-                    <YAxis
-                      stroke="#78716c"
-                      fontSize={10}
-                      tickLine={false}
-                      domain={[0, 1]}
-                      tickFormatter={(v) => `${Math.round(v * 100)}%`}
-                      label={{
-                        value: 'Metric Rate (%)',
-                        angle: -90,
-                        position: 'insideLeft',
-                        offset: 0,
-                        fill: '#78716c',
-                        fontSize: 10,
-                      }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: '#1c1917',
-                        borderColor: '#292524',
-                        fontSize: '11px',
-                        color: '#f5f5f4',
-                        borderRadius: '4px',
-                        padding: '6px 10px',
-                      }}
-                      formatter={(val, name) => [
-                        `${(Number(val) * 100).toFixed(1)}%`,
-                        name === 'f1' ? 'F1 Harmonic Mean' : name === 'precision' ? 'Precision' : 'Recall',
-                      ]}
-                      labelFormatter={(label) => `Threshold θ = ${Number(label).toFixed(2)}`}
-                    />
-                    <Legend
-                      verticalAlign="top"
-                      align="right"
-                      wrapperStyle={{ fontSize: '10px', paddingBottom: '8px' }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="f1"
-                      name="F1 Score"
-                      stroke="#ea580c"
-                      strokeWidth={2}
-                      dot={{ r: 2 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="precision"
-                      name="Precision"
-                      stroke="#10b981"
-                      strokeWidth={1.5}
-                      strokeDasharray="3 3"
-                      dot={false}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="recall"
-                      name="Recall"
-                      stroke="#78716c"
-                      strokeWidth={1.5}
-                      strokeDasharray="3 3"
-                      dot={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                {mounted && metrics.thresholdCurve && metrics.thresholdCurve.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={metrics.thresholdCurve}
+                      margin={{ top: 10, right: 25, left: 10, bottom: 25 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#292524" opacity={0.2} />
+                      <XAxis
+                        dataKey="threshold"
+                        stroke="#78716c"
+                        fontSize={10}
+                        tickLine={false}
+                        domain={[0.5, 1.0]}
+                        tickFormatter={(v) => Number(v).toFixed(2)}
+                        label={{
+                          value: 'Similarity Cutoff Threshold (θ)',
+                          position: 'insideBottom',
+                          offset: -14,
+                          fill: '#78716c',
+                          fontSize: 10,
+                        }}
+                      />
+                      <YAxis
+                        stroke="#78716c"
+                        fontSize={10}
+                        tickLine={false}
+                        domain={[0, 1]}
+                        tickFormatter={(v) => `${Math.round(v * 100)}%`}
+                        label={{
+                          value: 'Metric Rate (%)',
+                          angle: -90,
+                          position: 'insideLeft',
+                          offset: 0,
+                          fill: '#78716c',
+                          fontSize: 10,
+                        }}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: '#1c1917',
+                          borderColor: '#292524',
+                          fontSize: '11px',
+                          color: '#f5f5f4',
+                          borderRadius: '4px',
+                          padding: '6px 10px',
+                        }}
+                        formatter={(val, name) => [
+                          `${(Number(val) * 100).toFixed(1)}%`,
+                          name === 'f1' ? 'F1 Harmonic Mean' : name === 'precision' ? 'Precision' : 'Recall',
+                        ]}
+                        labelFormatter={(label) => `Threshold θ = ${Number(label).toFixed(2)}`}
+                      />
+                      <Legend
+                        verticalAlign="top"
+                        align="right"
+                        wrapperStyle={{ fontSize: '10px', paddingBottom: '8px' }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="f1"
+                        name="F1 Score"
+                        stroke="#ea580c"
+                        strokeWidth={2}
+                        dot={{ r: 2 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="precision"
+                        name="Precision"
+                        stroke="#10b981"
+                        strokeWidth={1.5}
+                        strokeDasharray="3 3"
+                        dot={false}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="recall"
+                        name="Recall"
+                        stroke="#78716c"
+                        strokeWidth={1.5}
+                        strokeDasharray="3 3"
+                        dot={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-xs text-stone-400 font-mono">
+                    {mounted ? 'No threshold curve data' : 'Loading sensitivity curve...'}
+                  </div>
+                )}
               </div>
             </div>
           </div>

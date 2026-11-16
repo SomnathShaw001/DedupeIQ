@@ -12,6 +12,8 @@ import {
   TestTube,
   Terminal,
   BookOpen,
+  Sparkles,
+  History,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -20,7 +22,9 @@ const NAV_ITEMS = [
   { href: '/detection', label: 'Detection', icon: ScanSearch },
   { href: '/review', label: 'Review Queue', icon: CheckCheck },
   { href: '/clusters', label: 'Clusters', icon: Network },
+  { href: '/simulator', label: 'Simulator', icon: Sparkles },
   { href: '/benchmark', label: 'Benchmark', icon: TestTube },
+  { href: '/audit', label: 'Audit Log', icon: History },
   { href: '/sql-lab', label: 'SQL Lab', icon: Terminal },
   { href: '/about', label: 'Method', icon: BookOpen },
 ];

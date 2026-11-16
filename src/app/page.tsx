@@ -73,6 +73,7 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [seeding, setSeeding] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -121,6 +122,7 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
+    setMounted(true);
     fetchData();
   }, []);
 
@@ -371,7 +373,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="h-52 w-full">
-            {chartData.length > 0 ? (
+            {mounted && chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                   <defs>
@@ -405,7 +407,7 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center text-xs text-stone-400 font-mono">
-                No detection runs recorded
+                {mounted ? 'No detection runs recorded' : 'Loading telemetry chart...'}
               </div>
             )}
           </div>
@@ -431,7 +433,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="h-52 w-full">
-            {sourceChartData.length > 0 ? (
+            {mounted && sourceChartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={sourceChartData} layout="vertical" margin={{ top: 5, right: 15, left: 10, bottom: 5 }}>
                   <XAxis type="number" stroke="#78716c" fontSize={10} unit="%" domain={[0, 100]} />
@@ -452,7 +454,7 @@ export default function DashboardPage() {
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center text-xs text-stone-400 font-mono">
-                No source telemetry data
+                {mounted ? 'No source telemetry data' : 'Loading source telemetry...'}
               </div>
             )}
           </div>
