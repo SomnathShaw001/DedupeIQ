@@ -67,7 +67,8 @@ export async function ensureMigrated(): Promise<{ applied: string[]; skipped: st
           'SELECT COUNT(*) as count FROM records'
         );
         const count = Number(countRes?.count ?? 0);
-        if (count === 0) {
+        const isTestEnv = !!process.env.VITEST || process.env.NODE_ENV === 'test';
+        if (count === 0 && !isTestEnv) {
           console.log('Database initialized empty. Auto-seeding starter master records and running detection...');
           const { seedBenchmarkDataset } = await import('../benchmark/generator');
           const { runDetection } = await import('../pipeline/detector');

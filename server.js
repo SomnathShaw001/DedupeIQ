@@ -14,12 +14,20 @@ const handle = app.getRequestHandler();
 app.prepare().then(() => {
   createServer(async (req, res) => {
     try {
+      if (req.url === '/health') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'ok', engine: 'DedupeIQ' }));
+        return;
+      }
+
       const parsedUrl = parse(req.url, true);
       await handle(req, res, parsedUrl);
     } catch (err) {
       console.error('Error occurred handling request:', err);
-      res.statusCode = 500;
-      res.end('Internal Server Error');
+      if (!res.headersSent) {
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
+        res.end('Server Error: ' + ((err && (err.stack || err.message)) || String(err)));
+      }
     }
   })
     .once('error', (err) => {

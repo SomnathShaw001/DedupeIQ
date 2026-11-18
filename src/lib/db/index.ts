@@ -4,6 +4,7 @@ import { fuzzystrmatch } from '@electric-sql/pglite/contrib/fuzzystrmatch';
 import { pg_trgm } from '@electric-sql/pglite/contrib/pg_trgm';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
 
 export interface QueryResultRow {
   [column: string]: unknown;
@@ -103,15 +104,25 @@ class PGliteDbClient implements DbClient {
   private initPromise: Promise<void> | null = null;
 
   constructor(dataDir?: string) {
-    if (dataDir && !fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
+    try {
+      if (dataDir && !fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+      this.pglite = new PGlite(dataDir, {
+        extensions: {
+          fuzzystrmatch,
+          pg_trgm,
+        },
+      });
+    } catch (fsErr) {
+      console.warn('Persistent PGlite storage initialization failed, falling back to in-memory mode:', fsErr);
+      this.pglite = new PGlite(undefined, {
+        extensions: {
+          fuzzystrmatch,
+          pg_trgm,
+        },
+      });
     }
-    this.pglite = new PGlite(dataDir, {
-      extensions: {
-        fuzzystrmatch,
-        pg_trgm,
-      },
-    });
   }
 
   getMode(): 'neon_postgres' | 'local_pglite' {
@@ -121,7 +132,18 @@ class PGliteDbClient implements DbClient {
   private async ensureReady(): Promise<void> {
     if (!this.initPromise) {
       this.initPromise = (async () => {
-        await this.pglite.waitReady;
+        try {
+          await this.pglite.waitReady;
+        } catch (waitErr) {
+          console.warn('PGlite persistent waitReady failed, recreating in-memory fallback:', waitErr);
+          this.pglite = new PGlite(undefined, {
+            extensions: {
+              fuzzystrmatch,
+              pg_trgm,
+            },
+          });
+          await this.pglite.waitReady;
+        }
       })();
     }
     await this.initPromise;
@@ -188,8 +210,15 @@ export function getDb(): DbClient {
   if (databaseUrl && !databaseUrl.startsWith('pglite://')) {
     global.__dbInstance = new PostgresDbClient(databaseUrl);
   } else {
-    const defaultDataDir = process.env.VERCEL
-      ? path.resolve('/tmp', '.data', 'dedupeiq.db')
+    const isCloudOrLinux = !!(
+      process.env.VERCEL ||
+      process.env.CATALYST_PROJECT_ID ||
+      process.env.X_ZOHO_CATALYST_ENVIRONMENT ||
+      process.env.NODE_ENV === 'production' ||
+      process.platform !== 'win32'
+    );
+    const defaultDataDir = isCloudOrLinux
+      ? undefined
       : path.resolve(process.cwd(), '.data', 'dedupeiq.db');
     global.__dbInstance = new PGliteDbClient(defaultDataDir);
   }

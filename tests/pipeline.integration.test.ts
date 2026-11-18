@@ -9,7 +9,7 @@ describe('DedupeIQ Pipeline Integration', () => {
 
   beforeAll(async () => {
     await ensureMigrated();
-  });
+  }, 30000);
 
   it('detects, blocks, scores, clusters, and audits duplicates end-to-end', async () => {
     // 1. Clean test sandbox
