@@ -19,6 +19,20 @@ export async function GET() {
 
     const db = getDb();
 
+    // Auto-seed starter master records on cold-boot if database has 0 records
+    try {
+      const countRes = await db.queryOne<{ count: string | number }>('SELECT COUNT(*) as count FROM records');
+      const count = Number(countRes?.count ?? 0);
+      if (count === 0) {
+        const { seedBenchmarkDataset } = await import('@/lib/benchmark/generator');
+        const { runDetection } = await import('@/lib/pipeline/detector');
+        await seedBenchmarkDataset(150, 0.16);
+        await runDetection({ useBlocking: true, thresholdAuto: 0.92, thresholdReview: 0.75 });
+      }
+    } catch (seedErr) {
+      console.warn('Dashboard auto-seed skipped or non-fatal:', seedErr);
+    }
+
     // 1. Fetch KPI metrics from analytical view
     let summary = {
       total_records: 0,
