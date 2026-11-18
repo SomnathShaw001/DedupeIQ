@@ -5,7 +5,7 @@ import { z } from 'zod';
 
 
 
-export const SQL_LAB_STAGES = [
+const SQL_LAB_STAGES = [
   {
     id: 'stage_1_schema',
     name: '1. Relational Schema & 3NF Design',

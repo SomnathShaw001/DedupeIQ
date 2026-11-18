@@ -104,11 +104,12 @@ class PGliteDbClient implements DbClient {
   private initPromise: Promise<void> | null = null;
 
   constructor(dataDir?: string) {
+    const targetDir = dataDir && dataDir !== 'memory://' ? dataDir : 'memory://';
     try {
-      if (dataDir && !fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
+      if (targetDir !== 'memory://' && !fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true });
       }
-      this.pglite = new PGlite(dataDir, {
+      this.pglite = new PGlite(targetDir, {
         extensions: {
           fuzzystrmatch,
           pg_trgm,
@@ -116,7 +117,7 @@ class PGliteDbClient implements DbClient {
       });
     } catch (fsErr) {
       console.warn('Persistent PGlite storage initialization failed, falling back to in-memory mode:', fsErr);
-      this.pglite = new PGlite(undefined, {
+      this.pglite = new PGlite('memory://', {
         extensions: {
           fuzzystrmatch,
           pg_trgm,
@@ -136,7 +137,7 @@ class PGliteDbClient implements DbClient {
           await this.pglite.waitReady;
         } catch (waitErr) {
           console.warn('PGlite persistent waitReady failed, recreating in-memory fallback:', waitErr);
-          this.pglite = new PGlite(undefined, {
+          this.pglite = new PGlite('memory://', {
             extensions: {
               fuzzystrmatch,
               pg_trgm,
@@ -218,7 +219,7 @@ export function getDb(): DbClient {
       process.platform !== 'win32'
     );
     const defaultDataDir = isCloudOrLinux
-      ? undefined
+      ? 'memory://'
       : path.resolve(process.cwd(), '.data', 'dedupeiq.db');
     global.__dbInstance = new PGliteDbClient(defaultDataDir);
   }

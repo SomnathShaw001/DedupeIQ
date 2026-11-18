@@ -59,28 +59,7 @@ let migrationPromise: Promise<{ applied: string[]; skipped: string[] }> | null =
 
 export async function ensureMigrated(): Promise<{ applied: string[]; skipped: string[] }> {
   if (!migrationPromise) {
-    migrationPromise = (async () => {
-      const res = await runMigrations();
-      try {
-        const db = getDb();
-        const countRes = await db.queryOne<{ count: string | number }>(
-          'SELECT COUNT(*) as count FROM records'
-        );
-        const count = Number(countRes?.count ?? 0);
-        const isTestEnv = !!process.env.VITEST || process.env.NODE_ENV === 'test';
-        if (count === 0 && !isTestEnv) {
-          console.log('Database initialized empty. Auto-seeding starter master records and running detection...');
-          const { seedBenchmarkDataset } = await import('../benchmark/generator');
-          const { runDetection } = await import('../pipeline/detector');
-          await seedBenchmarkDataset(150, 0.16);
-          await runDetection({ useBlocking: true, thresholdAuto: 0.92, thresholdReview: 0.75 });
-          console.log('✓ Initial master records and duplicate detection executed successfully.');
-        }
-      } catch (autoSeedErr) {
-        console.warn('Startup auto-seed check skipped or non-fatal:', autoSeedErr);
-      }
-      return res;
-    })().catch((err) => {
+    migrationPromise = runMigrations().catch((err) => {
       migrationPromise = null;
       throw err;
     });
